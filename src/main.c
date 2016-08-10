@@ -9,7 +9,22 @@
 #pragma clang diagnostic pop
 
 
-main()
+static void* register_functions(void *data)
 {
-        printf("hello world");
+        return NULL;
+}
+
+int main ()
+{
+        SCM func;
+
+        scm_init_guile();
+
+        scm_c_primitive_load( "src/script.scm" );
+
+        func = scm_variable_ref( scm_c_lookup( "simple-script" ) );
+
+        scm_call_0( func );
+
+        return 0;
 }
