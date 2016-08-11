@@ -9,11 +9,6 @@
 #pragma clang diagnostic pop
 
 
-static void* register_functions(void *data)
-{
-        return NULL;
-}
-
 int main ()
 {
         SCM func;
