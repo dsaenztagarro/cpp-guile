@@ -26,13 +26,16 @@ OUTPUT_DIR := build
 # create program "myfile.x" rather than the default program "a.out".
 #
 # -
+GUILE_CFLAGS = `guile-config compile`
 CFLAGS = -std=c11 \
+				 -pedantic \
 				 -Wall \
 				 -Wextra \
 				 -g \
-				`guile-config compile`
+				 $(GUILE_CFLAGS)
 
-LIBS = `guile-config link`
+GUILE_LIBS = `guile-config link`
+LIBS = $(GUILE_LIBS)
 
 COMPILE.c = $(CC) $(CFLAGS) -c
 LINK.o    = $(CC) $(CFLAGS) $(LIBS)

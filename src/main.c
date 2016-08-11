@@ -15,11 +15,13 @@ int main ()
 
         scm_init_guile();
 
-        scm_c_primitive_load( "src/script.scm" );
+        scm_c_primitive_load( "examples/tasks/rspec.scm" );
 
-        func = scm_variable_ref( scm_c_lookup( "simple-script" ) );
+        func = scm_variable_ref( scm_c_lookup( "rspec-task" ) );
 
-        scm_call_0( func );
+        char *filepath = "/tmp/file.rb";
+
+        scm_call_1(func, scm_from_utf8_string(filepath));
 
         return 0;
 }
