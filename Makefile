@@ -1,6 +1,6 @@
 .PHONY: all build main link clean sources
 
-CC = gcc
+CC = clang
 
 OUTPUT_DIR := build
 

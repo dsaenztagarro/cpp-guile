@@ -10,7 +10,6 @@
 
 #include <dirent.h>
 
-
 int main ()
 {
         DIR* tasks_dir;
@@ -23,14 +22,11 @@ int main ()
 
         while ((task_file = readdir(tasks_dir)))
         {
-                /* On linux/Unix we don't want current and parent directories
-                 * If you're on Windows machine remove this two lines
-                 */
                 if (!strcmp (task_file->d_name, "."))
                         continue;
                 if (!strcmp (task_file->d_name, ".."))
                         continue;
-                fprintf(stdout, "%s", task_file->d_name);
+                fprintf(stdout, "%s\n", task_file->d_name);
         }
 
         SCM func;
