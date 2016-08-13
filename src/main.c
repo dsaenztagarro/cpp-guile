@@ -13,21 +13,55 @@
 #include <sys/file.h>  // for O_RDONLY
 #include <sys/event.h> // for kqueue, kevent
 
+
+void init_kev(struct kevent *kev, int ident, void *udata)
+{
+        // EVFILT_VNODE Takes a file descriptor as the identifier and the
+        // events to watch for in fflags, and returns when one or more of the
+        // requested events occurs on the descriptor.
+        int filter = EVFILT_VNODE;
+
+        // Actions to perform on the event
+        unsigned int flags = EV_ADD | EV_ENABLE | EV_CLEAR;
+
+        // Filter-specific flags
+        unsigned int fflags = NOTE_WRITE;
+
+        EV_SET (kev, ident, filter, flags, fflags, 0, udata);
+}
+
+void init_changelist(struct kevent *changelist, char *filelist[], int nfiles)
+{
+        int i, fd;
+        struct kevent *change;
+
+        for (i = 0; i < nfiles; i++) {
+                char *filename = filelist[i];
+
+                if ((fd = open(filename, O_RDONLY, 0)) == -1) {
+                        fprintf(stderr, "Error: Failed to open file %s\n", filename);
+                        exit(-1);
+                }
+
+                change = changelist + i;
+                init_kev(change, fd, filename);
+        }
+}
+
 int main ()
 {
+        int nfiles = 2;
+        char *filelist[] = { "fixtures/test1.txt", "fixtures/test2.txt" };
+
+        int nchanges = nfiles;
+
         int kq = kqueue ();
 
-        struct kevent direvent;
+        struct kevent changelist[nfiles];
 
-        int dirfd = open("examples/tasks", O_RDONLY, 0);
+        init_changelist(changelist, filelist, nfiles);
 
-        unsigned int vnode_events;
-
-        vnode_events = NOTE_DELETE |  NOTE_WRITE | NOTE_EXTEND | NOTE_ATTRIB | NOTE_LINK | NOTE_RENAME | NOTE_REVOKE;
-        EV_SET (&direvent, dirfd, EVFILT_VNODE, EV_ADD | EV_CLEAR | EV_ENABLE,
-                vnode_events, 0, 0);
-
-        kevent(kq, &direvent, 1, NULL, 0, NULL);
+        kevent(kq, changelist, nchanges, NULL, 0, NULL);
 
         while (1) {
                 // camp on kevent() until something interesting happens
@@ -35,10 +69,12 @@ int main ()
                 if (kevent(kq, NULL, 0, &change, 1, NULL) == -1) { exit(1); }
                 // The signal event has NULL in the user data.  Check for that first.
                 if (change.udata == NULL) {
-                        break;
+                        fprintf (stderr, "Error: Received event without user data");
+                        exit(-1);
                 } else {
-                        // udata is non-null, so it's the name of the directory
-                        printf ("%s\n", (char*)change.udata);
+                        if (change.fflags == NOTE_WRITE) {
+                                printf ("Write %s\n", (char*)change.udata);
+                        }
                 }
         }
         close (kq);
@@ -47,9 +83,10 @@ int main ()
         DIR* tasks_dir;
         struct dirent* task_file;
 
-        if (NULL == (tasks_dir = opendir("examples/tasks")))
+        if (NULL == (tasks_dir = opendir("examples/taskss")))
         {
                 fprintf(stderr, "Error: Failed to open tasks directory\n");
+                exit(-1);
         }
 
         while ((task_file = readdir(tasks_dir)))
