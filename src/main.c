@@ -74,6 +74,7 @@ int main ()
                 } else {
                         if (change.fflags == NOTE_WRITE) {
                                 printf ("Write %s\n", (char*)change.udata);
+                                break
                         }
                 }
         }
