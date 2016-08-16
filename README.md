@@ -1,6 +1,21 @@
 # Tools
 
 - [Indent](https://www.gnu.org/software/indent/)
+- [Valgrind](http://valgrind.org)
+
+```
+==11278== LEAK SUMMARY:
+==11278==    definitely lost: 2,401 bytes in 14 blocks
+==11278==    indirectly lost: 5,192 bytes in 19 blocks
+==11278==      possibly lost: 1,670 bytes in 55 blocks
+==11278==    still reachable: 12,102 bytes in 134 blocks
+==11278==         suppressed: 75,503 bytes in 171 blocks
+==11278== Reachable blocks (those to which a pointer was found) are not shown.
+==11278== To see them, rerun with: --leak-check=full --show-leak-kinds=all
+==11278==
+==11278== For counts of detected and suppressed errors, rerun with: -v
+==11278== ERROR SUMMARY: 54 errors from 54 contexts (suppressed: 13 from 13)
+```
 
 # References
 
@@ -16,6 +31,11 @@
 - [Doing C code unit testing on a shoestring: Part 1- The basics and the tools](http://www.embedded.com/design/programming-languages-and-tools/4007177/2/Doing-C-code-unit-testing-on-a-shoestring-Part-1-The-basics-and-the-tools)
 - [Doing C code unit testing on a shoestring: Part 2- Code coverage analysis](http://www.embedded.com/design/prototyping-and-development/4007183/2/Doing-C-code-unit-testing-on-a-shoestring-Part-2-Code-coverage-analysis)
 - [Doing C code unit testing on a shoestring: Part 3 - Building a unit test framework](http://www.embedded.com/design/prototyping-and-development/4007187/2/Doing-C-code-unit-testing-on-a-shoestring-Part-3--Building-a-unit-test-framework)
+
+### Library functions
+
+- [Using gnu C __attribute__](http://www.unixwiz.net/techtips/gnu-c-attributes.html)
+- [vsnprintf](http://www.ibm.com/support/knowledgecenter/ssw_ibm_i_72/rtref/vsnprintf.htm)
 
 Find information from:
 

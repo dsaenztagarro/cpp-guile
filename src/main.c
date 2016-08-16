@@ -14,7 +14,7 @@
 #include <sys/event.h> // for kqueue, kevent
 
 
-void init_kev(struct kevent *kev, int ident, void *udata)
+void new_file_event(struct kevent *kev, int ident, void *udata)
 {
         // EVFILT_VNODE Takes a file descriptor as the identifier and the
         // events to watch for in fflags, and returns when one or more of the
@@ -30,12 +30,12 @@ void init_kev(struct kevent *kev, int ident, void *udata)
         EV_SET (kev, ident, filter, flags, fflags, 0, udata);
 }
 
-void init_changelist(struct kevent *changelist, char *filelist[], int nfiles)
+void register_file_events(int kq, char *filelist[], int nfiles)
 {
-        int i, fd;
-        struct kevent *change;
+        struct kevent changelist[nfiles];
 
-        for (i = 0; i < nfiles; i++) {
+        for (int i = 0; i < nfiles; i++) {
+                int fd;
                 char *filename = filelist[i];
 
                 if ((fd = open(filename, O_RDONLY, 0)) == -1) {
@@ -43,26 +43,15 @@ void init_changelist(struct kevent *changelist, char *filelist[], int nfiles)
                         exit(-1);
                 }
 
-                change = changelist + i;
-                init_kev(change, fd, filename);
+                struct kevent *change = changelist + i;
+                new_file_event(change, fd, filename);
         }
+
+        kevent(kq, changelist, nfiles, NULL, 0, NULL);
 }
 
-int main ()
+void listen_file_events(int kq)
 {
-        int nfiles = 2;
-        char *filelist[] = { "fixtures/test1.txt", "fixtures/test2.txt" };
-
-        int nchanges = nfiles;
-
-        int kq = kqueue ();
-
-        struct kevent changelist[nfiles];
-
-        init_changelist(changelist, filelist, nfiles);
-
-        kevent(kq, changelist, nchanges, NULL, 0, NULL);
-
         while (1) {
                 // camp on kevent() until something interesting happens
                 struct kevent change;
@@ -74,11 +63,23 @@ int main ()
                 } else {
                         if (change.fflags == NOTE_WRITE) {
                                 printf ("Write %s\n", (char*)change.udata);
-                                break
+                                break;
                         }
                 }
         }
         close (kq);
+}
+
+int main ()
+{
+        int nfiles = 2;
+        char *filelist[] = { "fixtures/test1.txt", "fixtures/test2.txt" };
+
+        int kq = kqueue();
+
+        register_file_events(kq, filelist, nfiles);
+
+        listen_file_events(kq);
 
 
         DIR* tasks_dir;

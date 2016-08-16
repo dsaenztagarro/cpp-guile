@@ -1,8 +1,13 @@
-.PHONY: all build main link clean sources
+.PHONY: all build main link clean sources server client
 
 CC = clang
 
+COMMON_DIR := "src/common"
 OUTPUT_DIR := build
+
+COMMON_SOURCES = $(shell find $(COMMON_DIR) -name *.c)
+
+COMMON_DEPS = $(subst .c,.o, $(COMMON_SOURCES))
 
 # GCC COMPILER FLAGS
 #
@@ -37,23 +42,19 @@ CFLAGS = -std=c11 \
 GUILE_LIBS = `guile-config link`
 LIBS = $(GUILE_LIBS)
 
-COMPILE.c = $(CC) $(CFLAGS) -c
+INCLUDES = -Iincludes/common
+
+COMPILE.c = $(CC) $(CFLAGS) $(INCLUDES) -c
 LINK.o    = $(CC) $(CFLAGS) $(LIBS)
 
 OUTPUT_OPTION = -o $(OUTPUT_DIR)/$@
 
+EXEC := server
 
-all: build link
 
-build: main
-	$(call log-action, "Linking", "bin/bfs")
-
-main: src/main.o
-
-link:
-	@echo "Linking"
-	@mkdir -p bin
-	@$(LINK.o) build/src/main.o $(OBJECTS) -o bin/main
+build: src/$(EXEC).o $(COMMON_DEPS)
+	@echo "Linking bin/$(EXEC)"
+	@$(LINK.o) build/$< $(OBJECTS) -o bin/$(EXEC)
 
 %.o: %.c
 	@echo "Compiling $<"
@@ -63,7 +64,20 @@ link:
 clean:
 	@$(RM) bin/
 	@$(RM) build/
-	$(call log-action, "Cleaning")
 
 sources:
 	$(info $(SOURCES))
+
+leaks: src/leaks.o
+
+valgrind:
+	valgrind --leak-check=yes ./bin/$(EXEC)
+
+main:
+	@make EXEC=main build
+
+server:
+	@make EXEC=server build
+
+client:
+	@make EXEC=client build
