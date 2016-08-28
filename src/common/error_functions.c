@@ -1,4 +1,5 @@
-#include <stdarg.h>
+#include <stdio.h>  // for vsnprintf
+#include <stdarg.h> // for va_list
 #include <stdlib.h> // for exit
 
 #define BUF_SIZE 500
@@ -10,6 +11,6 @@ errExit(const char *format,...)
 
         char user_msg[BUF_SIZE];
 
-        vsnprintf(user_msg, BUF_SIZE, format,
+        vsnprintf(user_msg, BUF_SIZE, format, ap);
         exit(-1);
 }

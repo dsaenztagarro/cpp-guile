@@ -8,6 +8,7 @@ OUTPUT_DIR := build
 COMMON_SOURCES = $(shell find $(COMMON_DIR) -name *.c)
 
 COMMON_DEPS = $(subst .c,.o, $(COMMON_SOURCES))
+COMMON_OBJECTS = $(addprefix $(OUTPUT_DIR)/, $(COMMON_DEPS))
 
 # GCC COMPILER FLAGS
 #
@@ -45,16 +46,20 @@ LIBS = $(GUILE_LIBS)
 INCLUDES = -Iincludes/common
 
 COMPILE.c = $(CC) $(CFLAGS) $(INCLUDES) -c
-LINK.o    = $(CC) $(CFLAGS) $(LIBS)
+LINK.o    = $(CC) $(CFLAGS) $(INCLUDES) $(LIBS)
 
 OUTPUT_OPTION = -o $(OUTPUT_DIR)/$@
 
 EXEC := server
 
+SOURCES = $(shell find $(LIB_DIR) -name *.c)
+DEPS = $(subst .c,.o, $(SOURCES))
+OBJECTS = $(addprefix $(OUTPUT_DIR)/, $(DEPS))
+
 
 build: src/$(EXEC).o $(COMMON_DEPS)
 	@echo "Linking bin/$(EXEC)"
-	@$(LINK.o) build/$< $(OBJECTS) -o bin/$(EXEC)
+	@$(LINK.o) build/$< $(COMMON_OBJECTS) -o bin/$(EXEC)
 
 %.o: %.c
 	@echo "Compiling $<"
