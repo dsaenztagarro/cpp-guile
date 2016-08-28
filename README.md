@@ -20,6 +20,7 @@
 # References
 
 - [Learn C the hard way](http://c.learncodethehardway.org/book/ex30.html)
+- [GNU make](https://www.gnu.org/software/make/manual/make.html)
 
 - [Debugging with GDB](https://www.sourceware.org/gdb/current/onlinedocs/gdb.html)
 - [GNU Guile 2.0.12 Reference Manual](https://www.gnu.org/software/guile/manual/)

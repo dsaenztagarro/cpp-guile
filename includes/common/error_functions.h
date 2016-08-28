@@ -4,6 +4,6 @@
 #define NORETURN __attribute__ ((__noreturn__))
 
 void
-errExit(const char *format,...);
+errExit(const char *,...);
 
 #endif
