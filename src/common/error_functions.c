@@ -4,10 +4,9 @@
 #include <stdlib.h> // for exit
 #include <errno.h>  // for errno
 
-#define BUF_SIZE 500
+#include "ename.c.inc" /* Defines ename and MAX_ENAME */
 
-static char *ename[] = { "" };
-#define MAX_ENAME 106
+#define BUF_SIZE 500
 
 void
 outputError(int err, const char *format, va_list argList)

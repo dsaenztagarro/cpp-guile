@@ -73,6 +73,10 @@ Find information from:
 - `man dirent`. Search modules and c functions.
 - Inspecting includes files: `/usr/include/dirent.h`, `/usr/include/sys/dirent.h`.
 
+### Docker
+
+- [File system sharing (osxfs)](https://docs.docker.com/docker-for-mac/osxfs/)
+- [Search packages ubuntu](http://packages.ubuntu.com)
 
 ### Codesign gdb on Mac OS X Yosemite (10.10.2)
 

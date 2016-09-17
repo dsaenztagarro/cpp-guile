@@ -1,6 +1,6 @@
 .PHONY: all build main link clean sources server client
 
-CC = clang
+CC ?= clang
 
 COMMON_DIR := "src/common"
 OUTPUT_DIR := build
@@ -9,16 +9,22 @@ COMMON_SOURCES := $(shell find $(COMMON_DIR) -name *.c)
 COMMON_DEPS := $(subst .c,.o, $(COMMON_SOURCES))
 COMMON_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(COMMON_DEPS))
 
+# CFLAGS
+
 GUILE_CFLAGS := `guile-config compile`
 
 WARNINGS := -Wall -Wextra -pedantic
 
 CFLAGS ?= -std=gnu99 -g $(WARNINGS) $(GUILE_CFLAGS)
 
+# LIBS
+
 GUILE_LIBS = `guile-config link`
 LIBS = $(GUILE_LIBS)
 
-INCLUDES := -Iincludes/common
+INCLUDES := -Iincludes/common -Ibuild/includes
+
+# COMMANDS
 
 COMPILE.c = $(CC) $(CFLAGS) $(INCLUDES) -c
 LINK.o    = $(CC) $(CFLAGS) $(INCLUDES) $(LIBS)
@@ -27,9 +33,7 @@ OUTPUT_OPTION = -o $(OUTPUT_DIR)/$@
 
 EXEC := server
 
-SOURCES = $(shell find $(LIB_DIR) -name *.c)
-DEPS = $(subst .c,.o, $(SOURCES))
-OBJECTS = $(addprefix $(OUTPUT_DIR)/, $(DEPS))
+# OPTIONS
 
 ifeq ($(VERBOSE),1)
 	SILENCER :=
@@ -37,7 +41,7 @@ else
 	SILENCER := @
 endif
 
-build: src/$(EXEC).o $(COMMON_DEPS)
+build: src/$(EXEC).o ename.c.inc $(COMMON_DEPS)
 	@echo "Linking bin/$(EXEC)"
 	$(SILENCER)$(LINK.o) build/$< $(COMMON_OBJECTS) -o bin/$(EXEC)
 
@@ -46,12 +50,14 @@ build: src/$(EXEC).o $(COMMON_DEPS)
 	$(SILENCER)mkdir -p $(shell dirname build/$<)
 	$(SILENCER)$(COMPILE.c) $< $(OUTPUT_OPTION)
 
-clean:
-	@$(RM) bin/
-	@$(RM) build/
+ename.c.inc:
+	@echo "Generating ename.c.inc header"
+	$(SILENCER)mkdir -p build/includes
+	$(SILENCER)./scripts/build_ename.sh > ./build/includes/ename.c.inc
 
-sources:
-	$(info $(SOURCES))
+clean:
+	$(SILENCER)$(RM) bin/
+	$(SILENCER)$(RM) build/
 
 leaks: src/leaks.o
 
