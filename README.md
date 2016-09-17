@@ -17,6 +17,36 @@
 ==11278== ERROR SUMMARY: 54 errors from 54 contexts (suppressed: 13 from 13)
 ```
 
+## GCC Compiler flags
+
+- `-Wall`
+ tells the compiler to implement 'all' Warning options. Warnings are
+ diagnostic messages that report constructions which are not inherently
+ erroneous but which are risky or suggest there may have been an error. Very
+ useful for debugging code.
+
+- `-ansi`
+ tells the compiler to implement the ANSI language option. This turns off
+ certain "features" of GCC which are incompatible with the ANSI standard.
+
+- `-pedantic`
+ used in conjunction with -ansi, this tells the compiler to be adhere
+ strictly to the ANSI standard, rejecting any code which is not compliant.
+
+- `-o`
+tells the compiler to save the compiled program under the name . So, typing
+"gcc myfile.c -o myfile.x" will take the source code of file "myfile.c" and
+create program "myfile.x" rather than the default program "a.out".
+
+## Makefile functions
+
+```
+COMMON_DEPS := $(subst .c,.o, $(COMMON_SOURCES))
+$(COMMON_SOURCES:.c=.o)
+```
+
+See Makefile [8.2 Functions for String Substitution and Analysis](https://www.gnu.org/software/make/manual/html_node/Text-Functions.html)
+
 # References
 
 - [Learn C the hard way](http://c.learncodethehardway.org/book/ex30.html)
