@@ -40,4 +40,7 @@ docker build -t 'cdev:v1' .
 docker rmi $(docker images -q -f "dangling=true")
 
 # Compile on Ubuntu with gcc
-docker run -ti --rm -e CC=gcc -v $(pwd):/docker cdev:v1 make server
+docker run --name ubuntu_cdev -ti --rm -e CC=gcc -v $(pwd):/docker cdev:v1 make server
+
+# Creates a file in a running docker container
+docker exec -d ubuntu_bash touch /tmp/execWorks

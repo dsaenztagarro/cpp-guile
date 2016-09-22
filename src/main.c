@@ -13,6 +13,7 @@
 #include <sys/file.h>  // for O_RDONLY
 #include <sys/event.h> // for kqueue, kevent
 
+#include "vendor/libguile"
 
 void new_file_event(struct kevent *kev, int ident, void *udata)
 {
@@ -50,7 +51,7 @@ void register_file_events(int kq, char *filelist[], int nfiles)
         kevent(kq, changelist, nfiles, NULL, 0, NULL);
 }
 
-void listen_file_events(int kq)
+void watch_loop(int kq)
 {
         while (1) {
                 // camp on kevent() until something interesting happens
@@ -79,7 +80,7 @@ int main ()
 
         register_file_events(kq, filelist, nfiles);
 
-        listen_file_events(kq);
+        watch_loop(kq);
 
 
         DIR* tasks_dir;
