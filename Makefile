@@ -67,8 +67,8 @@ valgrind:
 main:
 	@make EXEC=main build
 
-server:
-	@make EXEC=server build
+sv_dgram:
+	@make EXEC=sv_dgram build
 
-client:
-	@make EXEC=client build
+cl_dgram:
+	@make EXEC=cl_dgram build
