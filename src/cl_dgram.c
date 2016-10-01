@@ -6,7 +6,7 @@
 
 #include "error_functions.h"
 
-#define SV_SOCK_PATH "/tmp/sv_socket_dgram"
+#define SV_SOCK_PATH "/tmp/udp.server.socket"
 #define BUF_SIZE 1024
 
 int

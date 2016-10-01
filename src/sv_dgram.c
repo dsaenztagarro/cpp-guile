@@ -1,16 +1,30 @@
+#include <signal.h>     // for signal
 #include <stdio.h>
+#include <stdlib.h>     // for EXIT_SUCCESS
 #include <string.h>     // for memset
 #include <sys/un.h>     // for sockaddr_un
-#include <sys/socket.h> // for socket
+#include <sys/socket.h> // for socket, bind
 
 #include "error_functions.h"
 
-#define SV_SOCK_PATH "/tmp/sv_socket_dgram"
+#define SV_SOCK_PATH "/tmp/udp.server.socket"
 #define BUF_SIZE 500
+
+static int exitGracefully = 0;
+
+static void
+sigHandler(int sig)
+{
+        exitGracefully = 1;
+}
 
 int
 main()
 {
+        if (signal(SIGINT, sigHandler) == SIG_ERR) {
+                errExit("signal");
+        }
+
         struct sockaddr_un svaddr, claddr;
         int sfd;
         ssize_t numBytes;
@@ -30,7 +44,7 @@ main()
                 errExit("bind");
         }
 
-        for (;;) {
+        for(;;) {
                 len = sizeof(struct sockaddr_un);
                 numBytes = recvfrom(sfd, buf, BUF_SIZE, 0,
                                 (struct sockaddr_un *)&claddr, &len);
@@ -42,8 +56,14 @@ main()
                 printf("Server received %ld bytes from %s\n", (long) numBytes,
                         claddr.sun_path);
 
-                printf("Server received message %s", buf);
+                printf("Server received message %s\n", buf);
+
+                if (exitGracefully == 1) {
+                        printf("Server exiting gracefully\n");
+                        remove(svaddr.sun_path);
+                        break;
+                }
         }
 
-	printf("Server");
+        exit(EXIT_SUCCESS);
 }
