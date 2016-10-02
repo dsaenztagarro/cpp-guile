@@ -34,5 +34,6 @@ errExit(const char *format, ...)
         outputError(errno, format, argList);
         va_end(argList);
 
+        // TODO: return errno and handle gracefully interruption
         exit(-1);
 }

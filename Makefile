@@ -1,39 +1,8 @@
 .PHONY: all build main link clean sources server client
 
-CC ?= clang
-
-COMMON_DIR := "src/common"
-OUTPUT_DIR := build
-
-COMMON_SOURCES := $(shell find $(COMMON_DIR) -name *.c)
-COMMON_DEPS := $(subst .c,.o, $(COMMON_SOURCES))
-COMMON_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(COMMON_DEPS))
-
-# CFLAGS
-
-GUILE_CFLAGS := `guile-config compile`
-
-WARNINGS := -Wall -Wextra -pedantic
-
-CFLAGS ?= -std=gnu99 -g $(WARNINGS) $(GUILE_CFLAGS)
-
-# LIBS
-
-GUILE_LIBS = `guile-config link`
-LIBS = $(GUILE_LIBS)
-
-INCLUDES := -Iincludes/common -Ibuild/includes
-
-# COMMANDS
-
-COMPILE.c = $(CC) $(CFLAGS) $(INCLUDES) -c
-LINK.o    = $(CC) $(CFLAGS) $(INCLUDES) $(LIBS)
-
-OUTPUT_OPTION = -o $(OUTPUT_DIR)/$@
-
-EXEC := server
-
 # OPTIONS
+
+$(info $(TEST))
 
 ifeq ($(VERBOSE),1)
 	SILENCER :=
@@ -41,7 +10,53 @@ else
 	SILENCER := @
 endif
 
-build: src/$(EXEC).o ename.c.inc $(COMMON_DEPS)
+MACROS := -D TEST
+
+
+.DEFAULT_GOAL := test
+
+CC ?= cc
+
+EXEC := mazingerz
+
+COMMON_DIR := "src/common"
+EXEC_DIR := "src/$(EXEC)"
+OUTPUT_DIR := build
+
+COMMON_SOURCES := $(shell find $(COMMON_DIR) -name *.c)
+COMMON_DEPS := $(subst .c,.o, $(COMMON_SOURCES))
+COMMON_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(COMMON_DEPS))
+
+EXEC_SOURCES := $(shell find $(EXEC_DIR) -name *.c)
+EXEC_DEPS := $(subst .c,.o, $(EXEC_SOURCES))
+EXEC_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(EXEC_DEPS))
+
+# CFLAGS
+
+# GUILE_CFLAGS := `guile-config compile`
+
+WARNINGS := -Wall -Wextra -pedantic
+
+CFLAGS ?= -std=gnu99 -g $(WARNINGS) # $(GUILE_CFLAGS)
+
+
+
+# LIBS
+
+# GUILE_LIBS = `guile-config link`
+# LIBS = $(GUILE_LIBS)
+
+INCLUDES := -Iinclude/ -Ibuild/include
+
+# COMMANDS
+
+COMPILE.c = $(CC) $(MACROS) $(CFLAGS) $(INCLUDES) -c
+LINK.o    = $(CC) $(MACROS) $(CFLAGS) $(INCLUDES) $(LIBS)
+
+OUTPUT_OPTION = -o $(OUTPUT_DIR)/$@
+
+
+build: src/$(EXEC).o ename.c.inc $(COMMON_DEPS) $(EXEC_DEPS)
 	@echo "Linking bin/$(EXEC)"
 	$(SILENCER)$(LINK.o) build/$< $(COMMON_OBJECTS) -o bin/$(EXEC)
 
@@ -52,8 +67,8 @@ build: src/$(EXEC).o ename.c.inc $(COMMON_DEPS)
 
 ename.c.inc:
 	@echo "Generating ename.c.inc header"
-	$(SILENCER)mkdir -p build/includes
-	$(SILENCER)./scripts/build_ename.sh > ./build/includes/ename.c.inc
+	$(SILENCER)mkdir -p build/include
+	$(SILENCER)./scripts/build_ename.sh > ./build/include/ename.c.inc
 
 clean:
 	$(SILENCER)$(RM) bin/
@@ -67,8 +82,13 @@ valgrind:
 main:
 	@make EXEC=main build
 
-sv_dgram:
-	@make EXEC=sv_dgram build
+mazingerz:
+	@make EXEC=mazingerz build
+
+test:
+	@mkdir -p bin/mazingerz
+	@make TEST=yes EXEC=mazingerz/message build
+	@valgrind --leak-check=yes ./bin/mazingerz/message
 
 cl_dgram:
 	@make EXEC=cl_dgram build

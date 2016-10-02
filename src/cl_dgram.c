@@ -4,9 +4,9 @@
 #include <sys/socket.h> // for socket
 #include <unistd.h>     // for getpid
 
-#include "error_functions.h"
+#include "common/error.h"
 
-#define SV_SOCK_PATH "/tmp/udp.server.socket"
+#define SV_SOCK_PATH "/tmp/mazingerz.socket"
 #define BUF_SIZE 1024
 
 int
