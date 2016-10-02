@@ -2,10 +2,10 @@
 #include <stdio.h>
 #include <stdlib.h>     // for EXIT_SUCCESS
 #include <string.h>     // for memset
+#include <sys/socket.h> // for recvfrom
 #include <sys/un.h>     // for sockaddr_un
-#include <sys/socket.h> // for socket, bind
 
-#include "error_functions.h"
+#include "common.h"
 
 #define SV_SOCK_PATH "/tmp/udp.server.socket"
 #define BUF_SIZE 500
@@ -25,24 +25,13 @@ main()
                 errExit("signal");
         }
 
-        struct sockaddr_un svaddr, claddr;
+        struct sockaddr_un claddr;
         int sfd;
         ssize_t numBytes;
         socklen_t len;
         char buf[BUF_SIZE];
 
-        sfd = socket(AF_UNIX, SOCK_DGRAM, 0);
-        if (sfd == -1) {
-                errExit("socket");
-        }
-
-        memset(&svaddr, 0, sizeof(struct sockaddr_un));
-        svaddr.sun_family = AF_UNIX;
-        strncpy(svaddr.sun_path, SV_SOCK_PATH, sizeof(svaddr.sun_path)-1);
-
-        if (bind(sfd, (struct sockaddr_un *) &svaddr, sizeof(struct sockaddr_un)) == -1) {
-                errExit("bind");
-        }
+        sfd = make_named_socket(SV_SOCK_PATH);
 
         for(;;) {
                 len = sizeof(struct sockaddr_un);
@@ -50,7 +39,7 @@ main()
                                 (struct sockaddr_un *)&claddr, &len);
 
                 if (numBytes == -1) {
-                        errExit("bind");
+                        errExit("recvfrom");
                 }
 
                 printf("Server received %ld bytes from %s\n", (long) numBytes,
@@ -60,7 +49,7 @@ main()
 
                 if (exitGracefully == 1) {
                         printf("Server exiting gracefully\n");
-                        remove(svaddr.sun_path);
+                        remove_socket(sfd);
                         break;
                 }
         }
