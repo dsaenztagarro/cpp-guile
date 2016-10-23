@@ -11,14 +11,14 @@ message_t*
 extract_message(char input[])
 {
         char command[3];
-        char data[3];
+        char data[10];
         message_t *message = NULL;
 
         if (sscanf(input, "%s %s", command, data) == 2) {
-                message = malloc(sizeof(message_t));
-                ssize_t command_len = (ssize_t)strlen(command) + 1;
+                ssize_t command_len = strlen(command) + 1;
                 ssize_t data_len = strlen(data) + 1;
 
+                message = malloc(sizeof(message_t));
                 message->command = malloc(command_len * sizeof(char));
                 message->data = malloc(data_len * sizeof(char));
 
@@ -49,11 +49,9 @@ test_extract_message()
 {
         message_t *ptr_message;
 
-        ptr_message = extract_message("ADD *.rb");
-
+        ptr_message = extract_message("ADD XXXXX");
         assert((strcmp(ptr_message->command, "ADD") == 0), "command is parsed");
-        assert((strcmp(ptr_message->data, "*.rb") == 0), "data is parsed");
-
+        assert((strcmp(ptr_message->data, "XXXXX") == 0), "data is parsed");
         free_message(ptr_message);
 }
 
