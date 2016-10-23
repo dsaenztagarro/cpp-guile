@@ -2,7 +2,8 @@ language: c
 compiler:
   - cc
   - clang
-install: apt-get install valgrind
+sudo: required
+install: sudo apt-get install valgrind
 script:
   - make test
 
