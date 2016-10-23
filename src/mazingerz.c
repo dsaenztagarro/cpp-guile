@@ -21,6 +21,15 @@
 void*
 fsevent_handler(void * arg);
 
+void
+handle_message(message_t *message)
+{
+        pthread_t fsevent_thread;
+
+        if (pthread_create(&fsevent_thread, NULL, fsevent_handler, message) > 0)
+                errExit("pthread_create");
+}
+
 int
 main()
 {
@@ -54,10 +63,7 @@ main()
                         }
                 }
 
-                // pthread_t fsevent_thread;
-
-                // if (pthread_create(&fsevent_thread, NULL, fsevent_handler, NULL) > 0)
-                //         errExit("pthread_create");
+                handle_message(message);
         }
 
         printf("Server exiting gracefully\n");
@@ -70,9 +76,13 @@ void*
 fsevent_handler(void * arg)
 {
         UNUSED(arg);
-        // while(1) {
-        //         printf("Fsevent loop..");
-        //         sleep(1);
-        // }
+        message_t *message = (message_t *)arg;
+        printf("HANDLER: %s %s", message->command, message->data);
+
+        while(keep_looping()) {
+                printf("Fsevent loop..");
+                sleep(5);
+        }
+        printf("Thread exiting gracefully\n");
         return NULL;
 }
