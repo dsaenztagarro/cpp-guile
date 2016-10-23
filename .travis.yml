@@ -1,0 +1,8 @@
+language: c
+compiler:
+  - cc
+  - clang
+install: apt-get install valgrind
+script:
+  - make test
+

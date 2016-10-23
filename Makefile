@@ -93,7 +93,7 @@ mazingerz:
 test:
 	@mkdir -p bin/mazingerz
 	@make MACROS="-D TEST" EXEC=mazingerz/message build
-	# @valgrind --leak-check=yes ./bin/mazingerz/message
+	@valgrind --leak-check=yes ./bin/mazingerz/message
 
 cl_dgram:
 	@make EXEC=cl_dgram build
