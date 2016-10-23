@@ -2,18 +2,17 @@
 
 # OPTIONS
 
-$(info $(TEST))
-
-ifeq ($(VERBOSE),1)
-	SILENCER :=
+ifeq ($(VERBOSE),'yes')
+	$(info testA)
+	SILENCER :=@
 else
-	SILENCER := @
+	$(info testB)
+	SILENCER :=@
 endif
 
-MACROS := -D TEST
+SILENCER :=@
 
-
-.DEFAULT_GOAL := test
+.DEFAULT_GOAL := mazingerz
 
 CC ?= cc
 
@@ -26,6 +25,12 @@ OUTPUT_DIR := build
 COMMON_SOURCES := $(shell find $(COMMON_DIR) -name *.c)
 COMMON_DEPS := $(subst .c,.o, $(COMMON_SOURCES))
 COMMON_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(COMMON_DEPS))
+
+ROBOT_DIR := "src/$(EXEC)"
+
+ROBOT_SOURCES := $(shell find $(ROBOT_DIR) -name *.c)
+ROBOT_DEPS := $(subst .c,.o, $(ROBOT_SOURCES))
+ROBOT_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(ROBOT_DEPS))
 
 EXEC_SOURCES := $(shell find $(EXEC_DIR) -name *.c)
 EXEC_DEPS := $(subst .c,.o, $(EXEC_SOURCES))
@@ -56,7 +61,7 @@ LINK.o    = $(CC) $(MACROS) $(CFLAGS) $(INCLUDES) $(LIBS)
 OUTPUT_OPTION = -o $(OUTPUT_DIR)/$@
 
 
-build: src/$(EXEC).o ename.c.inc $(COMMON_DEPS) $(EXEC_DEPS)
+build: src/$(EXEC).o ename.c.inc $(COMMON_DEPS) $(ROBOT_DEPS) $(EXEC_DEPS)
 	@echo "Linking bin/$(EXEC)"
 	$(SILENCER)$(LINK.o) build/$< $(COMMON_OBJECTS) -o bin/$(EXEC)
 
@@ -87,8 +92,8 @@ mazingerz:
 
 test:
 	@mkdir -p bin/mazingerz
-	@make TEST=yes EXEC=mazingerz/message build
-	@valgrind --leak-check=yes ./bin/mazingerz/message
+	@make MACROS="-D TEST" EXEC=mazingerz/message build
+	# @valgrind --leak-check=yes ./bin/mazingerz/message
 
 cl_dgram:
 	@make EXEC=cl_dgram build

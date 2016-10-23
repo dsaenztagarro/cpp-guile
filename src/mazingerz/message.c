@@ -1,4 +1,4 @@
-#include <stdio.h>  // for sscanf, printf
+#include <stdio.h>  // for sscanf, printf, fflush
 #include <string.h> // for strlen
 #include <stdlib.h> // for malloc, free
 

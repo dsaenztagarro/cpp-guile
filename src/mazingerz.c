@@ -1,6 +1,5 @@
 #include <errno.h>      // for errno, EAGAIN
 #include <pthread.h>    // for pthread_create
-#include <signal.h>     // for signal, SIG_INT
 #include <stdio.h>
 #include <stdlib.h>     // for EXIT_SUCCESS
 #include <string.h>     // for memset
@@ -10,6 +9,8 @@
 #include "common/error.h"
 #include "common/socket.h"
 #include "common/list.h"
+#include "common/macros.h"
+#include "mazingerz/signals.c"
 
 #include "mazingerz/event.c"
 #include "mazingerz/message.c"
@@ -17,33 +18,13 @@
 #define SV_SOCK_PATH "/tmp/mazingerz.socket"
 #define BUF_SIZE 500
 
-#define UNUSED(x) (void)(x)
-
 void*
 fsevent_handler(void * arg);
-
-static int exitGracefully = 0;
-
-static void
-sigHandler(int sig)
-{
-        UNUSED(sig);
-        exitGracefully = 1;
-}
-
-int
-keep_looping()
-{
-        return exitGracefully == 0;
-}
-
 
 int
 main()
 {
-        if (signal(SIGINT, sigHandler) == SIG_ERR) {
-                errExit("signal");
-        }
+        setup_signals();
 
         struct sockaddr_un claddr;
         socklen_t len = sizeof(struct sockaddr_un);
@@ -59,7 +40,7 @@ main()
                         (struct sockaddr *)&claddr, &len);
 
                 printf("Received message from %s\n", claddr.sun_path);
-                printf("Message content: %s\n", input);
+                printf("Message content: %s\n", buf);
 
                 if (num_bytes >= 0) {
                         message_t *message = extract_message(buf);
