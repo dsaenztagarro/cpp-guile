@@ -1,5 +1,5 @@
-#ifndef ERROR_FUNCTIONS_H
-#define ERROR_FUNCTIONS_H
+#ifndef COMMON_ERROR_H
+#define COMMON_ERROR_H
 
 #define NORETURN __attribute__ ((__noreturn__))
 

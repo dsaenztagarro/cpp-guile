@@ -4,6 +4,8 @@
 - [Valgrind](http://valgrind.org)
 
 ```
+# -din  Specifies the indentation, in character positions, of global variable names and all struct/union member
+#       names relative to the beginning of their type declaration.  The default is -di16.
 indent -di1 src/main.c
 ```
 
@@ -64,8 +66,11 @@ http://eradman.com/posts/kqueue-tcp.html
 - [Doing C code unit testing on a shoestring: Part 1- The basics and the tools](http://www.embedded.com/design/programming-languages-and-tools/4007177/2/Doing-C-code-unit-testing-on-a-shoestring-Part-1-The-basics-and-the-tools)
 - [Doing C code unit testing on a shoestring: Part 2- Code coverage analysis](http://www.embedded.com/design/prototyping-and-development/4007183/2/Doing-C-code-unit-testing-on-a-shoestring-Part-2-Code-coverage-analysis)
 - [Doing C code unit testing on a shoestring: Part 3 - Building a unit test framework](http://www.embedded.com/design/prototyping-and-development/4007187/2/Doing-C-code-unit-testing-on-a-shoestring-Part-3--Building-a-unit-test-framework)
+## Libraries
 
-### Library functions
+- [libevent – an event notification library](http://libevent.org)
+
+# Library functions
 
 - [Using gnu C __attribute__](http://www.unixwiz.net/techtips/gnu-c-attributes.html)
 - [vsnprintf](http://www.ibm.com/support/knowledgecenter/ssw_ibm_i_72/rtref/vsnprintf.htm)
@@ -74,6 +79,21 @@ Find information from:
 
 - `man dirent`. Search modules and c functions.
 - Inspecting includes files: `/usr/include/dirent.h`, `/usr/include/sys/dirent.h`.
+
+### Command line
+
+```
+# Find system headers
+clang -x c -v -E /dev/null
+
+getconf GNU_LIBPTHREAD_VERSION
+```
+
+Add system headers to vim path (example):
+
+```
+set path=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.12.sdk/usr/include`
+```
 
 ### Docker
 
@@ -115,3 +135,7 @@ Restart the taskagted service, and sign the binary.
 $ sudo killall taskgated
 $ codesign -fs gdb-cert /usr/local/bin/gdb
 ```
+
+# Next commit
+
+- Added macro UNUSED
