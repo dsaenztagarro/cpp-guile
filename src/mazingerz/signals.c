@@ -3,25 +3,24 @@
 #include "common/error.h"
 #include "common/macros.h"
 
-static int exitGracefully = 0;
+static int exit_gracefully = 0;
 
 static void
-sigHandler(int sig)
+sighandler(int sig)
 {
         UNUSED(sig);
-        exitGracefully = 1;
+        exit_gracefully = 1;
 }
 
 void
-setup_signals()
+catch_signals()
 {
-        if (signal(SIGINT, sigHandler) == SIG_ERR) {
+        if (signal(SIGINT, sighandler) == SIG_ERR)
                 errExit("signal");
-        }
 }
 
 int
-keep_looping()
+not_interrupted()
 {
-        return exitGracefully == 0;
+        return exit_gracefully == 0;
 }

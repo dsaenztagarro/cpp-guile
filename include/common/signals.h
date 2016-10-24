@@ -2,9 +2,9 @@
 #define MAZINGERZ_SIGNALS_H
 
 void
-setup_signals();
+catch_signals();
 
 int
-keep_looping();
+not_interrupted();
 
 #endif

@@ -30,10 +30,12 @@ handle_message(message_t *message)
                 errExit("pthread_create");
 }
 
+
+
 int
 main()
 {
-        setup_signals();
+        catch_signals();
 
         struct sockaddr_un claddr;
         socklen_t len = sizeof(struct sockaddr_un);
@@ -43,7 +45,7 @@ main()
         int sfd = create_socket(SV_SOCK_PATH);
         set_receive_timeout_socket(sfd);
 
-        while(keep_looping()) {
+        while(not_interrupted()) {
                 // message_t *message = receive_message(sfd);
                 num_bytes = recvfrom(sfd, buf, BUF_SIZE, 0,
                         (struct sockaddr *)&claddr, &len);
@@ -66,6 +68,8 @@ main()
                 handle_message(message);
         }
 
+        // TODO: iterate with pthread_join
+
         printf("Server exiting gracefully\n");
         remove_socket(sfd);
 
@@ -75,11 +79,10 @@ main()
 void*
 fsevent_handler(void * arg)
 {
-        UNUSED(arg);
         message_t *message = (message_t *)arg;
         printf("HANDLER: %s %s", message->command, message->data);
 
-        while(keep_looping()) {
+        while(not_interrupted()) {
                 printf("Fsevent loop..");
                 sleep(5);
         }

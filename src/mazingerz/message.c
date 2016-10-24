@@ -1,44 +1,89 @@
-#include <stdio.h>  // for sscanf, printf, fflush
-#include <string.h> // for strlen
-#include <stdlib.h> // for malloc, free
+#include <stdio.h>         // for sscanf, printf, fflush
+#include <string.h>        // for strlen
+#include <stdlib.h>        // for malloc, free
+
+// #include <sys/syslimits.h> // for PATH_MAX (macos)
+#include <linux/limits.h> // for PATH_MAX (ubuntu)
+
+#include "common/list.h"
+
+/* Message format:
+ *
+ * WatchableDir
+ * WatchableType1 WatchablePattern1
+ * WatchableType2 WatchablePattern2
+ */
+
+
+// struct sockaddr_un socket; // client socket
+// pthread_t thread; // server thread
+// char active;
 
 typedef struct message {
-        char *command;
-        char *data;
+        char watchable_dir[200];
+        node_t *watchables;
 } message_t;
 
-message_t*
+typedef struct watchable {
+        char *type;
+        char *pattern;
+} watchable_t;
+
+
+int
 extract_message(char input[])
 {
-        char command[3];
-        char data[10];
-        message_t *message = NULL;
+        int bytes_read = 0;
+        int total_bytes_read = 0;
 
-        if (sscanf(input, "%s %s", command, data) == 2) {
-                ssize_t command_len = strlen(command) + 1;
-                ssize_t data_len = strlen(data) + 1;
+        char watchable_dir[PATH_MAX];
+        int num_watchables;
+        // TODO: node_t *watchables = NULL;
 
-                message = malloc(sizeof(message_t));
-                message->command = malloc(command_len * sizeof(char));
-                message->data = malloc(data_len * sizeof(char));
+        char type[50];
+        char pattern[50];
 
-                strcpy(message->command, command);
-                strcpy(message->data, data);
-        } else {
-                printf("Invalid format");
-                // return result_error("Invalid format", 2);
+        if (sscanf(input, "%s\n%n", watchable_dir, &bytes_read) == 1)
+                total_bytes_read += bytes_read;
+        else
+                return -1;
+
+        printf("tbr: %d\n", bytes_read);
+        printf("READ watchable_dir: %s\n", watchable_dir);
+
+        char line[512];
+
+        while (sscanf(input + total_bytes_read, "%s %s\n%n", type, pattern, &bytes_read) == 2) {
+                printf("READ %s %s\n", type, pattern);
+                total_bytes_read += bytes_read;
         }
 
         fflush(stdout);
-        return message;
+        return 1;
+}
+
+watchable_t*
+create_watchable(const char *type, const char *pattern)
+{
+        ssize_t type_len = strlen(type) + 1;
+        ssize_t pattern_len = strlen(pattern) + 1;
+
+        watchable_t *watchable = malloc(sizeof(watchable_t));
+        watchable->type = calloc(type_len, sizeof(char));
+        watchable->pattern = calloc(pattern_len, sizeof(char));
+
+        strcpy(watchable->type, type);
+        strcpy(watchable->pattern, pattern);
+
+        return watchable;
 }
 
 void
-free_message(message_t *ptr_message)
+free_watchable(watchable_t *ptr_watchable)
 {
-        free(ptr_message->command);
-        free(ptr_message->data);
-        free(ptr_message);
+        free(ptr_watchable->type);
+        free(ptr_watchable->pattern);
+        free(ptr_watchable);
 }
 
 #ifdef TEST
@@ -47,17 +92,25 @@ free_message(message_t *ptr_message)
 void
 test_extract_message()
 {
+        char *message = "/tmp/dir\n\
+rspec_models spec/models/*.rb\n\
+rspec_acceptance spec/acceptance/*.rb";
+
+        // TODO: test with real message
+
         message_t *ptr_message;
 
-        ptr_message = extract_message("ADD XXXXX");
-        assert((strcmp(ptr_message->command, "ADD") == 0), "command is parsed");
-        assert((strcmp(ptr_message->data, "XXXXX") == 0), "data is parsed");
-        free_message(ptr_message);
+        int ret = extract_message(message);
+
+        // assert((strcmp(ptr_message->command, "ADD") == 0), "command is parsed");
+        // assert((strcmp(ptr_message->data, "XXXXX") == 0), "data is parsed");
+        // free_message(ptr_message);
 }
 
 int
 main()
 {
+        setup_test_runner();
         test_extract_message();
 }
 #endif
