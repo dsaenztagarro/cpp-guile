@@ -96,5 +96,8 @@ test:
 	./bin/mazingerz/message
 	# @valgrind --leak-check=yes ./bin/mazingerz/message
 
+test2:
+	$(CC) $(MACROS) $(CFLAGS) $(INCLUDES) -D TEST -o ./bin/test src/common/list.c src/common/test.c include/common/test.h
+
 cl_dgram:
 	@make EXEC=cl_dgram build

@@ -1,3 +1,6 @@
+#ifndef COMMON_LIST_H
+#define COMMON_LIST_H
+
 #include <stdio.h>  // for printf
 #include <stdlib.h> // for malloc
 
@@ -63,3 +66,21 @@ find_node(struct node *head, int match_node(struct node *node, int), int find_ke
         }
         return current;
 }
+#endif
+
+#ifdef TEST
+#include "common/test.h"
+
+void
+test_add_node()
+{
+        assert(0 == 0);
+}
+
+int
+main()
+{
+        setup_test_runner();
+        test_add_node();
+}
+#endif
