@@ -46,15 +46,12 @@ extract_message(message_t **message, char input[])
         else
                 return -1;
 
-        printf("READ basedir: %s\n", (*message)->basedir);
-
         while (sscanf(input + total_bytes_read, "%s %s\n%n", type, pattern, &bytes_read) == 2) {
                 printf("READ %s %s\n", type, pattern);
                 total_bytes_read += bytes_read;
         }
-
         fflush(stdout);
-        return 1;
+        return 0;
 }
 
 watchable_t*

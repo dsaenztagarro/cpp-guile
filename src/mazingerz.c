@@ -45,11 +45,11 @@ unread_message(int num_bytes)
         if (errno == EAGAIN) {
                 printf("Waiting for messages..\n");
                 fflush(stdout);
-                return 0;
+                return 1;
         } else {
                 errExit("recvfrom");
                 stop_execution();
-                return 1;
+                return -1;
         }
 }
 
@@ -80,7 +80,6 @@ main()
 
                 if (unread_message(num_bytes) == 0) {
                         printf("Received message from %s\n", claddr.sun_path);
-                        printf("Message content: %s\n", buf);
 
                         message_t *message;
                         if (extract_message(&message, buf) == 0) {
