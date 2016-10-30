@@ -20,7 +20,7 @@
 // char active;
 
 typedef struct message {
-        char watchable_dir[200];
+        char basedir[200];
         node_t *watchables;
 } message_t;
 
@@ -33,23 +33,19 @@ typedef struct watchable {
 int
 extract_message(char input[])
 {
-        int bytes_read = 0;
-        int total_bytes_read = 0;
+        int bytes_read, total_bytes_read;
+        bytes_read = total_bytes_read = 0;
 
-        char watchable_dir[PATH_MAX];
-        int num_watchables;
-        // TODO: node_t *watchables = NULL;
-
+        char basedir[PATH_MAX];
         char type[50];
         char pattern[50];
 
-        if (sscanf(input, "%s\n%n", watchable_dir, &bytes_read) == 1)
+        if (sscanf(input, "%s\n%n", basedir, &bytes_read) == 1)
                 total_bytes_read += bytes_read;
         else
                 return -1;
 
-        printf("tbr: %d\n", bytes_read);
-        printf("READ watchable_dir: %s\n", watchable_dir);
+        printf("READ basedir: %s\n", basedir);
 
         char line[512];
 
@@ -100,7 +96,7 @@ rspec_acceptance spec/acceptance/*.rb";
 
         message_t *ptr_message;
 
-        int ret = extract_message(message);
+        int ret = extract_message(&message);
 
         // assert((strcmp(ptr_message->command, "ADD") == 0), "command is parsed");
         // assert((strcmp(ptr_message->data, "XXXXX") == 0), "data is parsed");

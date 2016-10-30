@@ -1,8 +1,8 @@
-#define assert(test) do {\
+#define assert(message, test) do {\
         if (test) {\
-                printf("%s::%s PASSED\n", __FILE__, __func__);\
+                printf("%s::%s %s PASSED\n", __FILE__, __func__, message);\
         } else {\
-                printf("%s::%s FAILED\n", __FILE__, __func__);\
+                printf("%s::%s %s FAILED\n", __FILE__, __func__, message);\
         }\
 } while (0)
 

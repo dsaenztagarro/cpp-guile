@@ -98,6 +98,7 @@ test:
 
 test2:
 	$(CC) $(MACROS) $(CFLAGS) $(INCLUDES) -D TEST -o ./bin/test src/common/list.c src/common/test.c include/common/test.h
+	./bin/test
 
 cl_dgram:
 	@make EXEC=cl_dgram build

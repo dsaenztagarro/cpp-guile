@@ -20,7 +20,7 @@ catch_signals()
 }
 
 int
-not_interrupted()
+continue_execution
 {
         return exit_gracefully == 0;
 }

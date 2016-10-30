@@ -30,8 +30,6 @@ handle_message(message_t *message)
                 errExit("pthread_create");
 }
 
-
-
 int
 main()
 {
@@ -45,7 +43,7 @@ main()
         int sfd = create_socket(SV_SOCK_PATH);
         set_receive_timeout_socket(sfd);
 
-        while(not_interrupted()) {
+        while(continue_execution()) {
                 // message_t *message = receive_message(sfd);
                 num_bytes = recvfrom(sfd, buf, BUF_SIZE, 0,
                         (struct sockaddr *)&claddr, &len);
@@ -82,7 +80,7 @@ fsevent_handler(void * arg)
         message_t *message = (message_t *)arg;
         printf("HANDLER: %s %s", message->command, message->data);
 
-        while(not_interrupted()) {
+        while(continue_execution()) {
                 printf("Fsevent loop..");
                 sleep(5);
         }
