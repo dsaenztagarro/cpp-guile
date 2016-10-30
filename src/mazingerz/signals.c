@@ -5,11 +5,13 @@
 
 static int exit_gracefully = 0;
 
+void stop_execution();
+
 static void
 sighandler(int sig)
 {
         UNUSED(sig);
-        exit_gracefully = 1;
+        stop_execution();
 }
 
 void
@@ -20,7 +22,13 @@ catch_signals()
 }
 
 int
-continue_execution
+continue_execution()
 {
         return exit_gracefully == 0;
+}
+
+void
+stop_execution()
+{
+        exit_gracefully = 1;
 }

@@ -14,6 +14,7 @@
 
 #include "mazingerz/event.c"
 #include "mazingerz/message.c"
+#include "mazingerz/client.c"
 
 #define SV_SOCK_PATH "/tmp/mazingerz.socket"
 #define BUF_SIZE 500
@@ -24,10 +25,39 @@ fsevent_handler(void * arg);
 void
 handle_message(message_t *message)
 {
+        if (message) {
+                printf("handle message!");
+        }
+        /*
         pthread_t fsevent_thread;
 
         if (pthread_create(&fsevent_thread, NULL, fsevent_handler, message) > 0)
                 errExit("pthread_create");
+        */
+}
+
+
+int
+unread_message(int num_bytes)
+{
+        if (num_bytes > 0) return 0;
+
+        if (errno == EAGAIN) {
+                printf("Waiting for messages..\n");
+                fflush(stdout);
+                return 0;
+        } else {
+                errExit("recvfrom");
+                stop_execution();
+                return 1;
+        }
+}
+
+void
+process_message(message_t *message)
+{
+        printf("EXTRACTED basedir: %s", message->basedir);
+        handle_message(message);
 }
 
 int
@@ -48,22 +78,17 @@ main()
                 num_bytes = recvfrom(sfd, buf, BUF_SIZE, 0,
                         (struct sockaddr *)&claddr, &len);
 
-                printf("Received message from %s\n", claddr.sun_path);
-                printf("Message content: %s\n", buf);
+                if (unread_message(num_bytes) == 0) {
+                        printf("Received message from %s\n", claddr.sun_path);
+                        printf("Message content: %s\n", buf);
 
-                if (num_bytes >= 0) {
-                        message_t *message = extract_message(buf);
-                        printf("EXTRACTED %s %s", message->command, message->data);
-                } else {
-                        if (errno == EAGAIN) {
-                                printf("Waiting for messages..\n");
-                                fflush(stdout);
-                        } else {
-                                errExit("recvfrom");
+                        message_t *message;
+                        if (extract_message(&message, buf) == 0) {
+                                process_message(message);
+                                free(message);
                         }
                 }
 
-                handle_message(message);
         }
 
         // TODO: iterate with pthread_join
@@ -78,7 +103,7 @@ void*
 fsevent_handler(void * arg)
 {
         message_t *message = (message_t *)arg;
-        printf("HANDLER: %s %s", message->command, message->data);
+        printf("thread.basedir: %s", message->basedir);
 
         while(continue_execution()) {
                 printf("Fsevent loop..");

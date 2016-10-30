@@ -2,8 +2,8 @@
 #include <string.h>        // for strlen
 #include <stdlib.h>        // for malloc, free
 
-// #include <sys/syslimits.h> // for PATH_MAX (macos)
-#include <linux/limits.h> // for PATH_MAX (ubuntu)
+#include <sys/syslimits.h> // for PATH_MAX (macos)
+// #include <linux/limits.h> // for PATH_MAX (ubuntu)
 
 #include "common/list.h"
 
@@ -20,7 +20,7 @@
 // char active;
 
 typedef struct message {
-        char basedir[200];
+        char basedir[200]; // PATH_MAX
         node_t *watchables;
 } message_t;
 
@@ -31,23 +31,22 @@ typedef struct watchable {
 
 
 int
-extract_message(char input[])
+extract_message(message_t **message, char input[])
 {
+        *message = malloc(sizeof(message_t));
+
         int bytes_read, total_bytes_read;
         bytes_read = total_bytes_read = 0;
 
-        char basedir[PATH_MAX];
         char type[50];
         char pattern[50];
 
-        if (sscanf(input, "%s\n%n", basedir, &bytes_read) == 1)
+        if (sscanf(input, "%s\n%n", (*message)->basedir, &bytes_read) == 1)
                 total_bytes_read += bytes_read;
         else
                 return -1;
 
-        printf("READ basedir: %s\n", basedir);
-
-        char line[512];
+        printf("READ basedir: %s\n", (*message)->basedir);
 
         while (sscanf(input + total_bytes_read, "%s %s\n%n", type, pattern, &bytes_read) == 2) {
                 printf("READ %s %s\n", type, pattern);
