@@ -9,9 +9,6 @@ create_node(void *val);
 void
 add_node(node_t **head, void *val);
 
-int
-match_node(node_t *node, int key);
-
 void
 delete_list(node_t **head);
 
@@ -19,6 +16,6 @@ void
 print_list(node_t *head, void print_node(void *));
 
 node_t*
-find_node(node_t *head, int match_node(node_t *node, int), int find_key);
+find_node(node_t *head, int match_node(void *, void *), int find_key);
 
 #endif
