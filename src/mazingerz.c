@@ -1,14 +1,11 @@
 #include <errno.h>      // for errno, EAGAIN
 #include <pthread.h>    // for pthread_create
 #include <stdio.h>
-#include <stdlib.h>     // for EXIT_SUCCESS
-#include <string.h>     // for memset
 #include <sys/socket.h> // for recvfrom
 #include <sys/un.h>     // for sockaddr_un
 
 #include "common/error.h"
 #include "common/socket.h"
-#include "common/list.h"
 #include "common/macros.h"
 #include "mazingerz/signals.c"
 
