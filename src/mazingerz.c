@@ -58,6 +58,7 @@ process_message(message_t *message)
 {
         printf("EXTRACTED basedir: %s", message->basedir);
         handle_message(message);
+        free(message);
 }
 
 int
@@ -74,7 +75,6 @@ main()
         set_receive_timeout_socket(sfd);
 
         while(continue_execution()) {
-                // message_t *message = receive_message(sfd);
                 num_bytes = recvfrom(sfd, buf, BUF_SIZE, 0,
                         (struct sockaddr *)&claddr, &len);
 
@@ -82,10 +82,8 @@ main()
                         printf("Received message from %s\n", claddr.sun_path);
 
                         message_t *message;
-                        if (extract_message(&message, buf) == 0) {
+                        if (extract_message(&message, buf) == 0)
                                 process_message(message);
-                                free(message);
-                        }
                 }
 
         }

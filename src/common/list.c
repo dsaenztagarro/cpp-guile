@@ -38,7 +38,7 @@ delete_list(struct node **head)
 {
         while(*head != NULL) {
                 struct node *next_node = (*head)->next;
-                // free((*head)->val);
+                free((*head)->val);
                 free(*head);
                 *head = next_node;
         }

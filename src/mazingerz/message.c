@@ -29,6 +29,31 @@ typedef struct watchable {
         char *pattern;
 } watchable_t;
 
+watchable_t*
+create_watchable(const char *type, const char *pattern)
+{
+        ssize_t type_len = strlen(type) + 1;
+        ssize_t pattern_len = strlen(pattern) + 1;
+
+        watchable_t *watchable = malloc(sizeof(watchable_t));
+        if (!watchable) return NULL;
+        watchable->type = calloc(type_len, sizeof(char));
+        if (!watchable->type) return NULL;
+        watchable->pattern = calloc(pattern_len, sizeof(char));
+        if (!watchable->pattern) return NULL;
+
+        strcpy(watchable->type, type);
+        strcpy(watchable->pattern, pattern);
+
+        return watchable;
+}
+
+void
+add_watchable(message_t *message, const char *type, const char *pattern)
+{
+        watchable_t *watchable = create_watchable(type, pattern);
+        add_node(&message->watchables, watchable);
+}
 
 int
 extract_message(message_t **message, char input[])
@@ -47,27 +72,12 @@ extract_message(message_t **message, char input[])
                 return -1;
 
         while (sscanf(input + total_bytes_read, "%s %s\n%n", type, pattern, &bytes_read) == 2) {
-                printf("READ %s %s\n", type, pattern);
+                // printf("READ %s %s\n", type, pattern);
+                add_watchable(*message, type, pattern);
                 total_bytes_read += bytes_read;
         }
         fflush(stdout);
         return 0;
-}
-
-watchable_t*
-create_watchable(const char *type, const char *pattern)
-{
-        ssize_t type_len = strlen(type) + 1;
-        ssize_t pattern_len = strlen(pattern) + 1;
-
-        watchable_t *watchable = malloc(sizeof(watchable_t));
-        watchable->type = calloc(type_len, sizeof(char));
-        watchable->pattern = calloc(pattern_len, sizeof(char));
-
-        strcpy(watchable->type, type);
-        strcpy(watchable->pattern, pattern);
-
-        return watchable;
 }
 
 void
@@ -84,7 +94,7 @@ free_watchable(watchable_t *ptr_watchable)
 void
 test_extract_message()
 {
-        char *message = "/tmp/dir\n\
+        char *input = "/tmp/dir\n\
 rspec_models spec/models/*.rb\n\
 rspec_acceptance spec/acceptance/*.rb";
 
@@ -92,7 +102,7 @@ rspec_acceptance spec/acceptance/*.rb";
 
         message_t *ptr_message;
 
-        int ret = extract_message(&message);
+        int ret = extract_message(&message, input);
 
         // assert((strcmp(ptr_message->command, "ADD") == 0), "command is parsed");
         // assert((strcmp(ptr_message->data, "XXXXX") == 0), "data is parsed");

@@ -12,7 +12,7 @@ endif
 
 SILENCER :=@
 
-.DEFAULT_GOAL := test
+.DEFAULT_GOAL := mazingerz
 
 CC ?= cc
 
