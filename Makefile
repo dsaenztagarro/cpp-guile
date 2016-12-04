@@ -40,9 +40,11 @@ EXEC_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(EXEC_DEPS))
 
 # GUILE_CFLAGS := `guile-config compile`
 
-WARNINGS := -Wall -Wextra -pedantic
+# WARNINGS := -Wall -Wextra -pedantic
+WARNINGS := -Wall -Wextra
 
-CFLAGS ?= -std=gnu99 -g $(WARNINGS) # $(GUILE_CFLAGS)
+CFLAGS ?= -g $(WARNINGS) # $(GUILE_CFLAGS)
+# CFLAGS ?= -std=gnu99 -g $(WARNINGS) # $(GUILE_CFLAGS)
 
 
 

@@ -68,7 +68,7 @@ find_node(struct node *head, int match_node(void *, void *), void *value)
 }
 #endif
 
-#ifdef TEST
+#ifdef TEST_LIST
 #include "common/test.h"
 // Helpers
 

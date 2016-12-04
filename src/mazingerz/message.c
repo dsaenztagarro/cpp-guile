@@ -9,11 +9,10 @@
 
 /* Message format:
  *
- * WatchableDir
- * WatchableType1 WatchablePattern1
- * WatchableType2 WatchablePattern2
+ * {"basedir":"zzzzz"}
+ * {"id":"xxxx","pattern":"XXXXX"}
+ * {"id":"yyyy","pattern":"YYYYY"}
  */
-
 
 // struct sockaddr_un socket; // client socket
 // pthread_t thread; // server thread
@@ -21,71 +20,70 @@
 
 typedef struct message {
         char basedir[200]; // PATH_MAX
-        node_t *watchables;
+        struct list_head list_of_watcheds;
 } message_t;
 
-typedef struct watchable {
-        char *type;
+typedef struct watched {
+        char *id;
         char *pattern;
-} watchable_t;
+        struct list_head entry;
+} watched_t;
 
-watchable_t*
-create_watchable(const char *type, const char *pattern)
+watched_t*
+create_watched(const char *id, const char *pattern)
 {
-        ssize_t type_len = strlen(type) + 1;
+        ssize_t id_len = strlen(id) + 1;
         ssize_t pattern_len = strlen(pattern) + 1;
 
-        watchable_t *watchable = malloc(sizeof(watchable_t));
-        if (!watchable) return NULL;
-        watchable->type = calloc(type_len, sizeof(char));
-        if (!watchable->type) return NULL;
-        watchable->pattern = calloc(pattern_len, sizeof(char));
-        if (!watchable->pattern) return NULL;
+        watched_t *watched = malloc(sizeof(watched_t));
+        if (!watched) return NULL;
+        watched->id = calloc(id_len, sizeof(char));
+        if (!watched->id) return NULL;
+        watched->pattern = calloc(pattern_len, sizeof(char));
+        if (!watched->pattern) return NULL;
 
-        strcpy(watchable->type, type);
-        strcpy(watchable->pattern, pattern);
+        strcpy(watched->id, id);
+        strcpy(watched->pattern, pattern);
 
-        return watchable;
-}
-
-void
-add_watchable(message_t *message, const char *type, const char *pattern)
-{
-        watchable_t *watchable = create_watchable(type, pattern);
-        add_node(&message->watchables, watchable);
+        return watched;
 }
 
 int
 extract_message(message_t **message, char input[])
 {
-        *message = malloc(sizeof(message_t));
+        message_t *client = malloc(sizeof(message_t));
+        INIT_LIST_HEAD(&client->list_of_watcheds);
 
         int bytes_read, total_bytes_read;
         bytes_read = total_bytes_read = 0;
 
-        char type[50];
+        char id[50];
         char pattern[50];
 
-        if (sscanf(input, "%s\n%n", (*message)->basedir, &bytes_read) == 1)
+        if (sscanf(input, "{\"basedir\":\"%[^\"]\"}\n%n", client->basedir, &bytes_read) == 1)
                 total_bytes_read += bytes_read;
         else
                 return -1;
 
-        while (sscanf(input + total_bytes_read, "%s %s\n%n", type, pattern, &bytes_read) == 2) {
-                // printf("READ %s %s\n", type, pattern);
-                add_watchable(*message, type, pattern);
+        const char WATCHED_FORMAT[] = "{\"id\":\"%[^\"]\",\"pattern\":\"%[^\"]\"}\n%n";
+
+        while (sscanf(input + total_bytes_read, WATCHED_FORMAT, id, pattern, &bytes_read) == 2) {
+                watched_t *watched = create_watched(id, pattern);
+                list_add(&watched->entry, &(client->list_of_watcheds));
                 total_bytes_read += bytes_read;
         }
         fflush(stdout);
+
+        *message = client;
         return 0;
 }
 
 void
-free_watchable(watchable_t *ptr_watchable)
+free_watched(watched_t *ptr_watched)
 {
-        free(ptr_watchable->type);
-        free(ptr_watchable->pattern);
-        free(ptr_watchable);
+        free(ptr_watched->id);
+        free(ptr_watched->pattern);
+        free(ptr_watched);
 }
 
 #ifdef TEST
@@ -94,19 +92,27 @@ free_watchable(watchable_t *ptr_watchable)
 void
 test_extract_message()
 {
-        char *input = "/tmp/dir\n\
-rspec_models spec/models/*.rb\n\
-rspec_acceptance spec/acceptance/*.rb";
+        char input[] = "{\"basedir\":\"/Users/test/Code/\"}\n\
+{\"id\":\"rspec\",\"pattern\":\"spec/models/*.rb\"}\n\
+{\"id\":\"rspec_acceptance\",\"pattern\":\"spec/acceptance/*.rb\"}\n";
 
         // TODO: test with real message
 
-        message_t *ptr_message;
+        message_t *message;
 
         int ret = extract_message(&message, input);
 
-        // assert((strcmp(ptr_message->command, "ADD") == 0), "command is parsed");
-        // assert((strcmp(ptr_message->data, "XXXXX") == 0), "data is parsed");
-        // free_message(ptr_message);
+        if (!list_empty(&message->list_of_watcheds)) {
+                watched_t *watched;
+                list_for_each_entry(watched, &message->list_of_watcheds, entry) {
+                        printf("{ id: \"%s\", pattern: \"%s\" }\n", watched->id, watched->pattern);
+                }
+                puts("List not empty");
+        }
+        else
+                puts("List empty");
+
+        assert((!list_empty(&message->list_of_watcheds) == 0), "list of watcheds is not empty");
 }
 
 int
