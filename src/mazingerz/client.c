@@ -8,8 +8,24 @@
 node_t *clients;
 
 typedef struct client {
-        char *address; // socket unix path
+        char *address;     // socket unix path
+        pthread_t *thread; // server thread for client
 } client_t;
+
+client_t
+new_client(const char *address)
+{
+        client_t *nclient = malloc(sizeof(client_t));
+        nclient->address = calloc(address, sizeof(char));
+        if (strcpy(nclient->address, address) != 0) {
+                perror("add_client#strcp");
+                return EXIT_FAILURE;
+        }
+        return nclient;
+}
+
+node_t
+new_client_node(
 
 int
 add_client(node_t **client, struct sockaddr_un claddr)

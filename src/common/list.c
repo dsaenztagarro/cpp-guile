@@ -9,6 +9,17 @@ struct node {
         struct node *next;
 };
 
+struct node*
+new_node(void *val)
+{
+        struct node *node = malloc(sizeof(struct node));
+        if (node != NULL) {
+                node->val = val;
+                node->next = NULL;
+        }
+        return node;
+}
+
 int
 add_node(struct node **head, void *val)
 {

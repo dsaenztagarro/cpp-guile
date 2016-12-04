@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <sys/socket.h> // for recvfrom
 #include <sys/un.h>     // for sockaddr_un
+#include <sys/types.h>
 
 #include "common/error.h"
 #include "common/socket.h"
@@ -14,25 +15,11 @@
 #include "mazingerz/client.c"
 
 #define SV_SOCK_PATH "/tmp/mazingerz.socket"
+
 #define BUF_SIZE 500
 
 void*
 fsevent_handler(void * arg);
-
-void
-handle_message(message_t *message)
-{
-        if (message) {
-                printf("handle message!");
-        }
-        /*
-        pthread_t fsevent_thread;
-
-        if (pthread_create(&fsevent_thread, NULL, fsevent_handler, message) > 0)
-                errExit("pthread_create");
-        */
-}
-
 
 int
 unread_message(int num_bytes)
@@ -51,16 +38,34 @@ unread_message(int num_bytes)
 }
 
 void
-process_message(message_t *message)
+process_message(message_t *message, node_t **threads)
 {
-        printf("EXTRACTED basedir: %s", message->basedir);
-        handle_message(message);
+        pthread_t *thread;
+
+        if (pthread_create(&thread, NULL, fsevent_handler, message) != 0)
+                errExit("pthread_create");
+
+        add_node(*threads, thread);
+
         free(message);
+}
+
+void
+wait_for_threads(node_t **head)
+{
+        while(*head != NULL) {
+                struct node *next_node = (*head)->next;
+                free((*head)->val);
+                free(*head);
+                *head = next_node;
+        }
 }
 
 int
 main()
 {
+        node_t *threads;
+
         catch_signals();
 
         struct sockaddr_un claddr;
@@ -80,7 +85,7 @@ main()
 
                         message_t *message;
                         if (extract_message(&message, buf) == 0)
-                                process_message(message);
+                                process_message(message, &threads);
                 }
 
         }
@@ -99,10 +104,13 @@ fsevent_handler(void * arg)
         message_t *message = (message_t *)arg;
         printf("thread.basedir: %s", message->basedir);
 
-        while(continue_execution()) {
-                printf("Fsevent loop..");
+        int i = 0;
+        while(continue_execution() && i < 3) {
+                printf("Fsevent loop.. %d", i);
                 sleep(5);
+                i++;
         }
         printf("Thread exiting gracefully\n");
+
         return NULL;
 }
