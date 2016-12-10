@@ -8,18 +8,30 @@
 #include "common/error.h"
 #include "common/socket.h"
 #include "common/macros.h"
-#include "mazingerz/signals.c"
 
-#include "mazingerz/event.c"
-#include "mazingerz/message.c"
-#include "mazingerz/client.c"
+#include "mazingerz/server.h"
+#include "mazingerz/message.h"
 
 #define SV_SOCK_PATH "/tmp/mazingerz.socket"
 
 #define BUF_SIZE 500
 
 void*
-fsevent_handler(void * arg);
+fsevent_handler(void * arg)
+{
+        clientconf_t *conf = (clientconf_t *)arg;
+        printf("thread.basedir: %s", conf->basedir);
+
+        int i = 0;
+        while(continue_execution() && i < 3) {
+                printf("Fsevent loop.. %d", i);
+                sleep(5);
+                i++;
+        }
+        printf("Thread exiting gracefully\n");
+
+        return NULL;
+}
 
 int
 unread_message(int num_bytes)
@@ -38,18 +50,28 @@ unread_message(int num_bytes)
 }
 
 void
-process_message(message_t *message, node_t **threads)
+update_clientconf(clientconf_t *clientconf) //, node_t **threads)
 {
+        printf("{ basedir: \"%s\" }\n", &clientconf->basedir);
+
+        watched_t *watched;
+        list_for_each_entry(watched, &clientconf->list_of_watcheds, entry) {
+                printf("{ id: \"%s\", pattern: \"%s\" }\n", watched->id, watched->pattern);
+        }
+
+        /*
         pthread_t *thread;
 
-        if (pthread_create(&thread, NULL, fsevent_handler, message) != 0)
+        if (pthread_create(&thread, NULL, fsevent_handler, conf) != 0)
                 errExit("pthread_create");
 
         add_node(*threads, thread);
 
-        free(message);
+        free(conf);
+        */
 }
 
+/*
 void
 wait_for_threads(node_t **head)
 {
@@ -60,11 +82,14 @@ wait_for_threads(node_t **head)
                 *head = next_node;
         }
 }
+*/
+
+#ifndef TEST
 
 int
 main()
 {
-        node_t *threads;
+        serverconf_t serverconf;
 
         catch_signals();
 
@@ -73,44 +98,46 @@ main()
         ssize_t num_bytes;
         char buf[BUF_SIZE];
 
+        // TODO: startserver(&serverconf);
         int sfd = create_socket(SV_SOCK_PATH);
         set_receive_timeout_socket(sfd);
 
         while(continue_execution()) {
+                // TODO:
                 num_bytes = recvfrom(sfd, buf, BUF_SIZE, 0,
                         (struct sockaddr *)&claddr, &len);
 
                 if (unread_message(num_bytes) == 0) {
-                        printf("Received message from %s\n", claddr.sun_path);
 
-                        message_t *message;
-                        if (extract_message(&message, buf) == 0)
-                                process_message(message, &threads);
+                        register_client(&serverconf, claddr);
+
+                        clientconf_t *clientconf;
+                        if (extract_message(&clientconf, buf) == 0)
+                                update_clientconf(clientconf);
                 }
 
         }
 
-        // TODO: iterate with pthread_join
-
         printf("Server exiting gracefully\n");
         remove_socket(sfd);
+        // TODO: shutdown(&serverconf);
+        // * print message
+        // * remove server socket
+        // * iterate with pthread_join
 
         exit(EXIT_SUCCESS);
 }
 
-void*
-fsevent_handler(void * arg)
+#else
+
+#include "common/test.h"
+
+int
+main()
 {
-        message_t *message = (message_t *)arg;
-        printf("thread.basedir: %s", message->basedir);
-
-        int i = 0;
-        while(continue_execution() && i < 3) {
-                printf("Fsevent loop.. %d", i);
-                sleep(5);
-                i++;
-        }
-        printf("Thread exiting gracefully\n");
-
-        return NULL;
+        setup_test_runner();
+        test_start_server();
+        test_extract_message();
 }
+
+#endif

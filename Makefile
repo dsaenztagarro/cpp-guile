@@ -36,6 +36,9 @@ EXEC_SOURCES := $(shell find $(EXEC_DIR) -name *.c)
 EXEC_DEPS := $(subst .c,.o, $(EXEC_SOURCES))
 EXEC_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(EXEC_DEPS))
 
+DEPS := $(COMMON_DEPS) $(ROBOT_DEPS) $(EXEC_DEPS)
+OBJECTS := $(COMMON_OBJECTS) $(ROBOT_OBJECTS)
+
 # CFLAGS
 
 # GUILE_CFLAGS := `guile-config compile`
@@ -63,9 +66,9 @@ LINK.o    = $(CC) $(MACROS) $(CFLAGS) $(INCLUDES) $(LIBS)
 OUTPUT_OPTION = -o $(OUTPUT_DIR)/$@
 
 
-build: src/$(EXEC).o ename.c.inc $(COMMON_DEPS) $(ROBOT_DEPS) $(EXEC_DEPS)
+build: src/$(EXEC).o ename.c.inc $(DEPS)
 	@echo "Linking bin/$(EXEC)"
-	$(SILENCER)$(LINK.o) build/$< $(COMMON_OBJECTS) -o bin/$(EXEC)
+	$(SILENCER)$(LINK.o) -v build/$< $(OBJECTS) -o bin/$(EXEC)
 
 %.o: %.c
 	@echo "Compiling $<"
@@ -93,6 +96,11 @@ mazingerz:
 	@make EXEC=mazingerz build
 
 test:
+	@make MACROS="-D TEST" EXEC=mazingerz build
+	./bin/mazingerz
+
+
+test_message:
 	@mkdir -p bin/mazingerz
 	@make MACROS="-D TEST" EXEC=mazingerz/message build
 	./bin/mazingerz/message

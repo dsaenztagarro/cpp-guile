@@ -6,6 +6,7 @@
 // #include <linux/limits.h> // for PATH_MAX (ubuntu)
 
 #include "common/list.h"
+#include "mazingerz/message.h"
 
 /* Message format:
  *
@@ -14,20 +15,8 @@
  * {"id":"yyyy","pattern":"YYYYY"}
  */
 
-// struct sockaddr_un socket; // client socket
-// pthread_t thread; // server thread
-// char active;
-
-typedef struct message {
-        char basedir[200]; // PATH_MAX
-        struct list_head list_of_watcheds;
-} message_t;
-
-typedef struct watched {
-        char *id;
-        char *pattern;
-        struct list_head entry;
-} watched_t;
+const char COMMON_WATCHED_FORMAT[] = "{\"basedir\":\"%[^\"]\"}\n%n";
+const char WATCHED_FORMAT[] = "{\"id\":\"%[^\"]\",\"pattern\":\"%[^\"]\"}\n%n";
 
 watched_t*
 create_watched(const char *id, const char *pattern)
@@ -48,10 +37,11 @@ create_watched(const char *id, const char *pattern)
         return watched;
 }
 
+// TODO: get_clientconf_from_message (rename)
 int
-extract_message(message_t **message, char input[])
+extract_message(clientconf_t **message, char input[])
 {
-        message_t *client = malloc(sizeof(message_t));
+        clientconf_t *client = malloc(sizeof(clientconf_t));
         INIT_LIST_HEAD(&client->list_of_watcheds);
 
         int bytes_read, total_bytes_read;
@@ -60,12 +50,10 @@ extract_message(message_t **message, char input[])
         char id[50];
         char pattern[50];
 
-        if (sscanf(input, "{\"basedir\":\"%[^\"]\"}\n%n", client->basedir, &bytes_read) == 1)
+        if (sscanf(input, COMMON_WATCHED_FORMAT, client->basedir, &bytes_read) == 1)
                 total_bytes_read += bytes_read;
         else
                 return -1;
-
-        const char WATCHED_FORMAT[] = "{\"id\":\"%[^\"]\",\"pattern\":\"%[^\"]\"}\n%n";
 
         while (sscanf(input + total_bytes_read, WATCHED_FORMAT, id, pattern, &bytes_read) == 2) {
                 watched_t *watched = create_watched(id, pattern);
@@ -98,7 +86,7 @@ test_extract_message()
 
         // TODO: test with real message
 
-        message_t *message;
+        clientconf_t *message;
 
         int ret = extract_message(&message, input);
 
@@ -112,13 +100,7 @@ test_extract_message()
         else
                 puts("List empty");
 
-        assert((!list_empty(&message->list_of_watcheds) == 0), "list of watcheds is not empty");
+        assert(list_empty(&message->list_of_watcheds) != 1, "list of watcheds is not empty");
 }
 
-int
-main()
-{
-        setup_test_runner();
-        test_extract_message();
-}
 #endif

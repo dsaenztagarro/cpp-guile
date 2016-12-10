@@ -3,52 +3,41 @@
 #include <string.h> // for strcpy, strcmp
 #include <sys/un.h> // for sockaddr_un
 
-#include "common/list.h"
+#include "mazingerz/server.h"
 
-node_t *clients;
-
-typedef struct client {
-        char *address;     // socket unix path
-        pthread_t *thread; // server thread for client
-} client_t;
-
-client_t
+client_t*
 new_client(const char *address)
 {
+        ssize_t address_len = strlen(address) + 1;
+
         client_t *nclient = malloc(sizeof(client_t));
-        nclient->address = calloc(address, sizeof(char));
+        nclient->address = calloc(address_len, sizeof(char));
         if (strcpy(nclient->address, address) != 0) {
                 perror("add_client#strcp");
-                return EXIT_FAILURE;
+                return NULL;
         }
         return nclient;
 }
 
-node_t
-new_client_node(
-
-int
-add_client(node_t **client, struct sockaddr_un claddr)
+void
+register_client(serverconf_t *serverconf, struct sockaddr_un claddr)
 {
-        client_t *new_client = malloc(sizeof(client_t));
-        new_client->address = calloc(claddr.sun_len, sizeof(char));
-        if (strcpy(new_client->address, claddr.sun_path) != 0) {
-                perror("add_client#strcp");
-                return EXIT_FAILURE;
+        printf("Received message from %s\n", claddr.sun_path);
+        client_t *client;
+        if ((client = new_client(claddr.sun_path))) {
+                list_add(&client->entry, &serverconf->list_of_clients);
         }
-
-        add_node(client, new_client);
-        return EXIT_SUCCESS;
 }
 
-int
-match_client(void *val, void *search)
+client_t*
+find_client_by_address(serverconf_t *serverconf, const char *address)
 {
-        return strcmp(((client_t *)val)->address, (char *)search) == 0;
-}
-
-node_t*
-find_client(node_t *client, struct sockaddr_un claddr)
-{
-        return find_node(client, match_client, claddr.sun_len);
+        client_t *found;
+        client_t *client;
+        list_for_each_entry(client, &serverconf->list_of_clients, entry) {
+                if (strcmp(client->address, address) == 0) {
+                        found = client;
+                }
+        }
+        return found;
 }
