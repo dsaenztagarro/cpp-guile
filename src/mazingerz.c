@@ -10,9 +10,8 @@
 #include "common/macros.h"
 
 #include "mazingerz/server.h"
+#include "mazingerz/signals.h"
 #include "mazingerz/message.h"
-
-#define SV_SOCK_PATH "/tmp/mazingerz.socket"
 
 #define BUF_SIZE 500
 
@@ -98,13 +97,11 @@ main()
         ssize_t num_bytes;
         char buf[BUF_SIZE];
 
-        // TODO: startserver(&serverconf);
-        int sfd = create_socket(SV_SOCK_PATH);
-        set_receive_timeout_socket(sfd);
+        start_server(&serverconf);
 
         while(continue_execution()) {
                 // TODO:
-                num_bytes = recvfrom(sfd, buf, BUF_SIZE, 0,
+                num_bytes = recvfrom(serverconf.sfd, buf, BUF_SIZE, 0,
                         (struct sockaddr *)&claddr, &len);
 
                 if (unread_message(num_bytes) == 0) {
@@ -118,12 +115,7 @@ main()
 
         }
 
-        printf("Server exiting gracefully\n");
-        remove_socket(sfd);
-        // TODO: shutdown(&serverconf);
-        // * print message
-        // * remove server socket
-        // * iterate with pthread_join
+        stop_server(&serverconf);
 
         exit(EXIT_SUCCESS);
 }

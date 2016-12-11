@@ -15,4 +15,11 @@ typedef struct watched {
 int
 extract_message(clientconf_t **message, char input[]);
 
+#ifdef TEST
+
+void
+test_extract_message();
+
+#endif
+
 #endif

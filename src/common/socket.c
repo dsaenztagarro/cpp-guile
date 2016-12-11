@@ -1,4 +1,5 @@
 #include <stdio.h>      // for remove
+#include <stdlib.h>     // for EXIT_SUCCESS
 #include <string.h>     // for memset
 #include <sys/socket.h> // for socket, bind
 #include <sys/un.h>     // for sockaddr_un
@@ -33,9 +34,23 @@ remove_socket(int sfd)
 	struct sockaddr_un addr;
 
 	if (getsockname(sfd, (struct sockaddr *)&addr, (socklen_t *)&len) != 0)
-		errExit("remove_socket#getsock_name");
+		errExit("remove_socket#getsockname");
 
 	return remove(addr.sun_path);
+}
+
+int
+get_socket_name(int sfd, char *socket_name)
+{
+        int len = sizeof(struct sockaddr_un);
+	struct sockaddr_un addr;
+
+	if (getsockname(sfd, (struct sockaddr *)&addr, (socklen_t *)&len) != 0)
+		errExit("get_socket_name#getsockname");
+
+        strcpy(socket_name, addr.sun_path);
+
+        return EXIT_SUCCESS;
 }
 
 void

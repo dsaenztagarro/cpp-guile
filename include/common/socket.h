@@ -13,4 +13,11 @@ set_receive_timeout_socket(int sfd);
 void
 check_errors_recvfrom(int num_bytes);
 
+#ifdef TEST
+
+int
+getsockname_for(int sfd);
+
+#endif
+
 #endif

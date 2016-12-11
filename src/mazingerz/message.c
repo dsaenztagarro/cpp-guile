@@ -100,7 +100,8 @@ test_extract_message()
         else
                 puts("List empty");
 
-        assert(list_empty(&message->list_of_watcheds) != 1, "list of watcheds is not empty");
+        assert("list of watcheds is not empty",
+                        list_empty(&message->list_of_watcheds) != 1);
 }
 
 #endif

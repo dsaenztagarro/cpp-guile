@@ -5,7 +5,11 @@
 
 static int exit_gracefully = 0;
 
-void stop_execution();
+void
+stop_execution()
+{
+        exit_gracefully = 1;
+}
 
 static void
 sighandler(int sig)
@@ -25,10 +29,4 @@ int
 continue_execution()
 {
         return exit_gracefully == 0;
-}
-
-void
-stop_execution()
-{
-        exit_gracefully = 1;
 }

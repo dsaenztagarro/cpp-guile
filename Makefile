@@ -68,7 +68,7 @@ OUTPUT_OPTION = -o $(OUTPUT_DIR)/$@
 
 build: src/$(EXEC).o ename.c.inc $(DEPS)
 	@echo "Linking bin/$(EXEC)"
-	$(SILENCER)$(LINK.o) -v build/$< $(OBJECTS) -o bin/$(EXEC)
+	$(SILENCER)$(LINK.o) build/$< $(OBJECTS) -o bin/$(EXEC)
 
 %.o: %.c
 	@echo "Compiling $<"
@@ -96,6 +96,7 @@ mazingerz:
 	@make EXEC=mazingerz build
 
 test:
+	rm -f /tmp/mazingerz.socket
 	@make MACROS="-D TEST" EXEC=mazingerz build
 	./bin/mazingerz
 
