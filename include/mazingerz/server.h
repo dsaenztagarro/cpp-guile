@@ -16,7 +16,14 @@ typedef struct client {
         struct list_head entry;
 } client_t;
 
+#ifdef TEST
+
 void
 test_start_server();
+
+void
+test_stop_server();
+
+#endif
 
 #endif

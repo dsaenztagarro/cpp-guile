@@ -52,7 +52,26 @@ test_start_server()
                 file_exists = 1;
 
         assert("server socket expected name", strcmp(socket_name, SV_SOCK_PATH) == 0);
-        assert("server socket exists", file_exists == 1);
+        assert("server socket file exists", file_exists == 1);
+
+        stop_server(&serverconf);
+}
+
+void
+test_stop_server()
+{
+
+        serverconf_t serverconf;
+
+        start_server(&serverconf);
+
+        stop_server(&serverconf);
+
+        int file_exists = 1;
+        if (access(SV_SOCK_PATH, F_OK) == -1)
+                file_exists = 0;
+
+        assert("server socket file does not exist", file_exists == 0);
 }
 
 #endif

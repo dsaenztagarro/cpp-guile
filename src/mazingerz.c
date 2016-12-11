@@ -129,6 +129,7 @@ main()
 {
         setup_test_runner();
         test_start_server();
+        test_stop_server();
         test_extract_message();
 }
 
