@@ -2,18 +2,17 @@
 
 # OPTIONS
 
-$(info $(TEST))
-
-ifeq ($(VERBOSE),1)
-	SILENCER :=
+ifeq ($(VERBOSE),'yes')
+	$(info testA)
+	SILENCER :=@
 else
-	SILENCER := @
+	$(info testB)
+	SILENCER :=@
 endif
 
-MACROS := -D TEST
+SILENCER :=@
 
-
-.DEFAULT_GOAL := test
+.DEFAULT_GOAL := mazingerz
 
 CC ?= cc
 
@@ -27,17 +26,28 @@ COMMON_SOURCES := $(shell find $(COMMON_DIR) -name *.c)
 COMMON_DEPS := $(subst .c,.o, $(COMMON_SOURCES))
 COMMON_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(COMMON_DEPS))
 
+ROBOT_DIR := "src/$(EXEC)"
+
+ROBOT_SOURCES := $(shell find $(ROBOT_DIR) -name *.c)
+ROBOT_DEPS := $(subst .c,.o, $(ROBOT_SOURCES))
+ROBOT_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(ROBOT_DEPS))
+
 EXEC_SOURCES := $(shell find $(EXEC_DIR) -name *.c)
 EXEC_DEPS := $(subst .c,.o, $(EXEC_SOURCES))
 EXEC_OBJECTS := $(addprefix $(OUTPUT_DIR)/, $(EXEC_DEPS))
+
+DEPS := $(COMMON_DEPS) $(ROBOT_DEPS) $(EXEC_DEPS)
+OBJECTS := $(COMMON_OBJECTS) $(ROBOT_OBJECTS)
 
 # CFLAGS
 
 # GUILE_CFLAGS := `guile-config compile`
 
-WARNINGS := -Wall -Wextra -pedantic
+# WARNINGS := -Wall -Wextra -pedantic
+WARNINGS := -Wall -Wextra
 
-CFLAGS ?= -std=gnu99 -g $(WARNINGS) # $(GUILE_CFLAGS)
+CFLAGS ?= -g $(WARNINGS) # $(GUILE_CFLAGS)
+# CFLAGS ?= -std=gnu99 -g $(WARNINGS) # $(GUILE_CFLAGS)
 
 
 
@@ -56,9 +66,9 @@ LINK.o    = $(CC) $(MACROS) $(CFLAGS) $(INCLUDES) $(LIBS)
 OUTPUT_OPTION = -o $(OUTPUT_DIR)/$@
 
 
-build: src/$(EXEC).o ename.c.inc $(COMMON_DEPS) $(EXEC_DEPS)
+build: src/$(EXEC).o ename.c.inc $(DEPS)
 	@echo "Linking bin/$(EXEC)"
-	$(SILENCER)$(LINK.o) build/$< $(COMMON_OBJECTS) -o bin/$(EXEC)
+	$(SILENCER)$(LINK.o) build/$< $(OBJECTS) -o bin/$(EXEC)
 
 %.o: %.c
 	@echo "Compiling $<"
@@ -86,9 +96,20 @@ mazingerz:
 	@make EXEC=mazingerz build
 
 test:
+	rm -f /tmp/mazingerz.socket
+	@make MACROS="-D TEST" EXEC=mazingerz build
+	./bin/mazingerz
+
+
+test_message:
 	@mkdir -p bin/mazingerz
-	@make TEST=yes EXEC=mazingerz/message build
-	@valgrind --leak-check=yes ./bin/mazingerz/message
+	@make MACROS="-D TEST" EXEC=mazingerz/message build
+	./bin/mazingerz/message
+	# @valgrind --leak-check=yes ./bin/mazingerz/message
+
+test2:
+	$(CC) $(MACROS) $(CFLAGS) $(INCLUDES) -D TEST -o ./bin/test src/common/list.c src/common/test.c include/common/test.h
+	./bin/test
 
 cl_dgram:
 	@make EXEC=cl_dgram build

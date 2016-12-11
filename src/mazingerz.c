@@ -1,97 +1,136 @@
 #include <errno.h>      // for errno, EAGAIN
 #include <pthread.h>    // for pthread_create
-#include <signal.h>     // for signal, SIG_INT
 #include <stdio.h>
-#include <stdlib.h>     // for EXIT_SUCCESS
-#include <string.h>     // for memset
 #include <sys/socket.h> // for recvfrom
 #include <sys/un.h>     // for sockaddr_un
+#include <sys/types.h>
 
 #include "common/error.h"
 #include "common/socket.h"
-#include "common/list.h"
+#include "common/macros.h"
 
-#include "mazingerz/event.c"
-#include "mazingerz/message.c"
+#include "mazingerz/server.h"
+#include "mazingerz/signals.h"
+#include "mazingerz/message.h"
 
-#define SV_SOCK_PATH "/tmp/mazingerz.socket"
 #define BUF_SIZE 500
 
-#define UNUSED(x) (void)(x)
-
 void*
-fsevent_handler(void * arg);
-
-static int exitGracefully = 0;
-
-static void
-sigHandler(int sig)
+fsevent_handler(void * arg)
 {
-        UNUSED(sig);
-        exitGracefully = 1;
+        clientconf_t *conf = (clientconf_t *)arg;
+        printf("thread.basedir: %s", conf->basedir);
+
+        int i = 0;
+        while(continue_execution() && i < 3) {
+                printf("Fsevent loop.. %d", i);
+                sleep(5);
+                i++;
+        }
+        printf("Thread exiting gracefully\n");
+
+        return NULL;
 }
 
 int
-keep_looping()
+unread_message(int num_bytes)
 {
-        return exitGracefully == 0;
+        if (num_bytes > 0) return 0;
+
+        if (errno == EAGAIN) {
+                printf("Waiting for messages..\n");
+                fflush(stdout);
+                return 1;
+        } else {
+                errExit("recvfrom");
+                stop_execution();
+                return -1;
+        }
 }
 
+void
+update_clientconf(clientconf_t *clientconf) //, node_t **threads)
+{
+        printf("{ basedir: \"%s\" }\n", &clientconf->basedir);
+
+        watched_t *watched;
+        list_for_each_entry(watched, &clientconf->list_of_watcheds, entry) {
+                printf("{ id: \"%s\", pattern: \"%s\" }\n", watched->id, watched->pattern);
+        }
+
+        /*
+        pthread_t *thread;
+
+        if (pthread_create(&thread, NULL, fsevent_handler, conf) != 0)
+                errExit("pthread_create");
+
+        add_node(*threads, thread);
+
+        free(conf);
+        */
+}
+
+/*
+void
+wait_for_threads(node_t **head)
+{
+        while(*head != NULL) {
+                struct node *next_node = (*head)->next;
+                free((*head)->val);
+                free(*head);
+                *head = next_node;
+        }
+}
+*/
+
+#ifndef TEST
 
 int
 main()
 {
-        if (signal(SIGINT, sigHandler) == SIG_ERR) {
-                errExit("signal");
-        }
+        serverconf_t serverconf;
+
+        catch_signals();
 
         struct sockaddr_un claddr;
         socklen_t len = sizeof(struct sockaddr_un);
         ssize_t num_bytes;
         char buf[BUF_SIZE];
 
-        int sfd = create_socket(SV_SOCK_PATH);
-        set_receive_timeout_socket(sfd);
+        start_server(&serverconf);
 
-        while(keep_looping()) {
-                // message_t *message = receive_message(sfd);
-                num_bytes = recvfrom(sfd, buf, BUF_SIZE, 0,
+        while(continue_execution()) {
+                // TODO:
+                num_bytes = recvfrom(serverconf.sfd, buf, BUF_SIZE, 0,
                         (struct sockaddr *)&claddr, &len);
 
-                printf("Received message from %s\n", claddr.sun_path);
-                printf("Message content: %s\n", input);
+                if (unread_message(num_bytes) == 0) {
 
-                if (num_bytes >= 0) {
-                        message_t *message = extract_message(buf);
-                        printf("EXTRACTED %s %s", message->command, message->data);
-                } else {
-                        if (errno == EAGAIN) {
-                                printf("Waiting for messages..\n");
-                                fflush(stdout);
-                        } else {
-                                errExit("recvfrom");
-                        }
+                        register_client(&serverconf, claddr);
+
+                        clientconf_t *clientconf;
+                        if (extract_message(&clientconf, buf) == 0)
+                                update_clientconf(clientconf);
                 }
 
-                // pthread_t fsevent_thread;
-
-                // if (pthread_create(&fsevent_thread, NULL, fsevent_handler, NULL) > 0)
-                //         errExit("pthread_create");
         }
 
-        printf("Server exiting gracefully\n");
-        remove_socket(sfd);
+        stop_server(&serverconf);
 
         exit(EXIT_SUCCESS);
 }
 
-void*
-fsevent_handler(void * arg)
+#else
+
+#include "common/test.h"
+
+int
+main()
 {
-        UNUSED(arg);
-        // while(1) {
-        //         printf("Fsevent loop..");
-        //         sleep(1);
-        // }
-        return NULL;
+        setup_test_runner();
+        test_start_server();
+        test_stop_server();
+        test_extract_message();
 }
+
+#endif

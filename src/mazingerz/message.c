@@ -1,44 +1,77 @@
-#include <stdio.h>  // for sscanf, printf
-#include <string.h> // for strlen
-#include <stdlib.h> // for malloc, free
+#include <stdio.h>         // for sscanf, printf, fflush
+#include <string.h>        // for strlen
+#include <stdlib.h>        // for malloc, free
 
-typedef struct message {
-        char *command;
-        char *data;
-} message_t;
+#include <sys/syslimits.h> // for PATH_MAX (macos)
+// #include <linux/limits.h> // for PATH_MAX (ubuntu)
 
-message_t*
-extract_message(char input[])
+#include "common/list.h"
+#include "mazingerz/message.h"
+
+/* Message format:
+ *
+ * {"basedir":"zzzzz"}
+ * {"id":"xxxx","pattern":"XXXXX"}
+ * {"id":"yyyy","pattern":"YYYYY"}
+ */
+
+const char COMMON_WATCHED_FORMAT[] = "{\"basedir\":\"%[^\"]\"}\n%n";
+const char WATCHED_FORMAT[] = "{\"id\":\"%[^\"]\",\"pattern\":\"%[^\"]\"}\n%n";
+
+watched_t*
+create_watched(const char *id, const char *pattern)
 {
-        char command[3];
-        char data[10];
-        message_t *message = NULL;
+        ssize_t id_len = strlen(id) + 1;
+        ssize_t pattern_len = strlen(pattern) + 1;
 
-        if (sscanf(input, "%s %s", command, data) == 2) {
-                ssize_t command_len = strlen(command) + 1;
-                ssize_t data_len = strlen(data) + 1;
+        watched_t *watched = malloc(sizeof(watched_t));
+        if (!watched) return NULL;
+        watched->id = calloc(id_len, sizeof(char));
+        if (!watched->id) return NULL;
+        watched->pattern = calloc(pattern_len, sizeof(char));
+        if (!watched->pattern) return NULL;
 
-                message = malloc(sizeof(message_t));
-                message->command = malloc(command_len * sizeof(char));
-                message->data = malloc(data_len * sizeof(char));
+        strcpy(watched->id, id);
+        strcpy(watched->pattern, pattern);
 
-                strcpy(message->command, command);
-                strcpy(message->data, data);
-        } else {
-                printf("Invalid format");
-                // return result_error("Invalid format", 2);
+        return watched;
+}
+
+// TODO: get_clientconf_from_message (rename)
+int
+extract_message(clientconf_t **message, char input[])
+{
+        clientconf_t *client = malloc(sizeof(clientconf_t));
+        INIT_LIST_HEAD(&client->list_of_watcheds);
+
+        int bytes_read, total_bytes_read;
+        bytes_read = total_bytes_read = 0;
+
+        char id[50];
+        char pattern[50];
+
+        if (sscanf(input, COMMON_WATCHED_FORMAT, client->basedir, &bytes_read) == 1)
+                total_bytes_read += bytes_read;
+        else
+                return -1;
+
+        while (sscanf(input + total_bytes_read, WATCHED_FORMAT, id, pattern, &bytes_read) == 2) {
+                watched_t *watched = create_watched(id, pattern);
+                list_add(&watched->entry, &(client->list_of_watcheds));
+                total_bytes_read += bytes_read;
         }
-
         fflush(stdout);
-        return message;
+
+        *message = client;
+        return 0;
 }
 
 void
-free_message(message_t *ptr_message)
+free_watched(watched_t *ptr_watched)
 {
-        free(ptr_message->command);
-        free(ptr_message->data);
-        free(ptr_message);
+        free(ptr_watched->id);
+        free(ptr_watched->pattern);
+        free(ptr_watched);
 }
 
 #ifdef TEST
@@ -47,17 +80,28 @@ free_message(message_t *ptr_message)
 void
 test_extract_message()
 {
-        message_t *ptr_message;
+        char input[] = "{\"basedir\":\"/Users/test/Code/\"}\n\
+{\"id\":\"rspec\",\"pattern\":\"spec/models/*.rb\"}\n\
+{\"id\":\"rspec_acceptance\",\"pattern\":\"spec/acceptance/*.rb\"}\n";
 
-        ptr_message = extract_message("ADD XXXXX");
-        assert((strcmp(ptr_message->command, "ADD") == 0), "command is parsed");
-        assert((strcmp(ptr_message->data, "XXXXX") == 0), "data is parsed");
-        free_message(ptr_message);
+        // TODO: test with real message
+
+        clientconf_t *message;
+
+        int ret = extract_message(&message, input);
+
+        if (!list_empty(&message->list_of_watcheds)) {
+                watched_t *watched;
+                list_for_each_entry(watched, &message->list_of_watcheds, entry) {
+                        printf("{ id: \"%s\", pattern: \"%s\" }\n", watched->id, watched->pattern);
+                }
+                puts("List not empty");
+        }
+        else
+                puts("List empty");
+
+        assert("list of watcheds is not empty",
+                        list_empty(&message->list_of_watcheds) != 1);
 }
 
-int
-main()
-{
-        test_extract_message();
-}
 #endif
