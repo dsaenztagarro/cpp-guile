@@ -90,6 +90,7 @@ main()
 {
         serverconf_t serverconf;
 
+        // TODO: move to start_server
         catch_signals();
 
         struct sockaddr_un claddr;

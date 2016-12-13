@@ -1,7 +1,7 @@
 #include <stdio.h>      // for remove
 #include <stdlib.h>     // for EXIT_SUCCESS
 #include <string.h>     // for memset
-#include <sys/socket.h> // for socket, bind
+#include <sys/socket.h> // for socket, bind, send_to
 #include <sys/un.h>     // for sockaddr_un
 #include <sys/time.h>   // for timeval
 
@@ -63,3 +63,28 @@ set_receive_timeout_socket(int sfd)
 	if (setsockopt(sfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&timeout, sizeof(timeout)) < 0)
 		errExit("set_receive_timeout_socket#setsockopt\n");
 }
+
+#ifdef TEST
+
+/*
+ * @param sfd [int] The sender socket file descriptor
+ * @param socket_path [char*] The destiny socket unix path
+ * @param message [char*] The message to be sent
+ */
+int
+send_message_to_socket(int sfd, const char *socket_path, const char *message)
+{
+        struct sockaddr_un dest_addr;
+        memset(&dest_addr, 0, sizeof(struct sockaddr_un));
+        dest_addr.sun_family = AF_UNIX;
+        strncpy(dest_addr.sun_path, socket_path, sizeof(dest_addr.sun_path) - 1);
+
+        int message_len = strlen(message);
+        if (sendto(sfd, message, message_len, 0, (struct sockaddr_un *) &dest_addr,
+                sizeof(struct sockaddr_un)) != message_len) {
+                errExit("sendto");
+        }
+
+}
+
+#endif

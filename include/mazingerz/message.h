@@ -17,6 +17,10 @@ extract_message(clientconf_t **message, char input[]);
 
 #ifdef TEST
 
+const char MESSAGE_TEST[] = "{\"basedir\":\"/Users/test/Code/\"}\n\
+{\"id\":\"rspec\",\"pattern\":\"spec/models/*.rb\"}\n\
+{\"id\":\"rspec_acceptance\",\"pattern\":\"spec/acceptance/*.rb\"}\n";
+
 void
 test_extract_message();
 
